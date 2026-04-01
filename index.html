@@ -96,7 +96,7 @@ button.submit {
 <div class="left" id="secrets"></div>
 
 <div class="right">
-    <h3>Confesá tu secreto...</h3>
+    <h3>Confesá tu secreto</h3>
 
     <textarea id="text" placeholder="Escribí tu secreto..."></textarea>
     <input type="number" id="age" placeholder="Edad">
@@ -119,7 +119,7 @@ import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, d
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",
+  apiKey: "TU_API_KEY",
   authDomain: "prettysecret-32c22.firebaseapp.com",
   projectId: "prettysecret-32c22",
   storageBucket: "prettysecret-32c22.firebasestorage.app",
@@ -158,7 +158,11 @@ async function addSecret() {
         age,
         gender: selectedGender,
         created: Date.now(),
-        likes: 0
+        reactions: {
+            neutral: 0,
+            shy: 0,
+            melt: 0
+        }
     });
 
     document.getElementById("text").value = "";
@@ -167,29 +171,36 @@ async function addSecret() {
     loadSecrets();
 }
 
-/* ❤️ LIKE */
-async function likeSecret(id, currentLikes) {
+/* 😶🤭🫠 REACCIONAR */
+async function react(secretId, type, current) {
 
-    const liked = JSON.parse(localStorage.getItem("likedSecrets") || "[]");
+    let reacted = localStorage.getItem("reactedSecrets");
 
-    if (liked.includes(id)) {
-        alert("Ya diste like a este secreto");
+    if (!reacted) {
+        reacted = {};
+    } else {
+        reacted = JSON.parse(reacted);
+    }
+
+    if (reacted[secretId]) {
+        alert("Ya reaccionaste a este secreto");
         return;
     }
 
-    await updateDoc(doc(db, "secretos", id), {
-        likes: (currentLikes || 0) + 1
+    await updateDoc(doc(db, "secretos", secretId), {
+        [`reactions.${type}`]: (current || 0) + 1
     });
 
-    liked.push(id);
-    localStorage.setItem("likedSecrets", JSON.stringify(liked));
+    reacted[secretId] = true;
+    localStorage.setItem("reactedSecrets", JSON.stringify(reacted));
 
     loadSecrets();
 }
-    await updateDoc(doc(db, "secretos", id), {
-        likes: (currentLikes || 0) + 1
-    });
-    loadSecrets();
+
+/* 🔽 MOSTRAR / OCULTAR */
+function toggleReactions(id) {
+    const el = document.getElementById(`r-${id}`);
+    el.style.display = el.style.display === "none" ? "block" : "none";
 }
 
 /* 💬 COMENTAR */
@@ -219,6 +230,8 @@ async function loadSecrets() {
     for (const d of snapshot.docs) {
         const data = d.data();
 
+        const reactions = data.reactions || { neutral:0, shy:0, melt:0 };
+
         const commentsSnap = await getDocs(collection(db, "secretos", d.id, "comentarios"));
 
         let commentsHTML = "";
@@ -233,15 +246,25 @@ async function loadSecrets() {
             <div class="meta">
                 Edad: ${data.age} | ${data.gender} • ${timeAgo(data.created)}
             </div>
+
             <div>${data.text}</div>
 
             <div style="margin-top:10px;">
-                ❤️ ${data.likes || 0}
-                <button onclick="likeSecret('${d.id}', ${data.likes || 0})">Like</button>
+                😶 ${reactions.neutral} 
+                🤭 ${reactions.shy} 
+                🫠 ${reactions.melt}
+
+                <button onclick="toggleReactions('${d.id}')">Reaccionar</button>
+
+                <div id="r-${d.id}" style="display:none; margin-top:5px;">
+                    <button onclick="react('${d.id}', 'neutral', ${reactions.neutral})">😶</button>
+                    <button onclick="react('${d.id}', 'shy', ${reactions.shy})">🤭</button>
+                    <button onclick="react('${d.id}', 'melt', ${reactions.melt})">🫠</button>
+                </div>
             </div>
 
             <div style="margin-top:10px;">
-                <input id="c-${d.id}" placeholder="Comentar..." style="font-size:12px;">
+                <input id="c-${d.id}" placeholder="¿Qué le dirías?" style="font-size:12px;">
                 <button onclick="addComment('${d.id}')">Enviar</button>
             </div>
 
@@ -257,7 +280,8 @@ async function loadSecrets() {
 /* 🔗 CONEXIÓN */
 document.getElementById("sendBtn").addEventListener("click", addSecret);
 
-window.likeSecret = likeSecret;
+window.react = react;
+window.toggleReactions = toggleReactions;
 window.addComment = addComment;
 
 /* 🚀 INICIO */
