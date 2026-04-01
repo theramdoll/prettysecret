@@ -1,123 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pretty Secret</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
-
-<style>
-body {
-    margin: 0;
-    background: #0d0d0d;
-    color: white;
-    font-family: Consolas, monospace;
-}
-
-header {
-    text-align: center;
-    padding: 20px;
-    font-size: 40px;
-    font-family: 'Orbitron', sans-serif;
-}
-
-.container {
-    display: flex;
-    height: 90vh;
-}
-
-.left {
-    width: 60%;
-    padding: 20px;
-    overflow-y: scroll;
-    border-right: 1px solid #333;
-}
-
-.secret {
-    background: #1a1a1a;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-}
-
-.meta {
-    font-size: 12px;
-    color: #aaa;
-}
-
-.right {
-    width: 40%;
-    padding: 20px;
-}
-
-textarea, input {
-    width: 100%;
-    background: #111;
-    border: none;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.gender {
-    display: flex;
-    margin-top: 10px;
-    background: black;
-}
-
-.gender button {
-    flex: 1;
-    padding: 10px;
-    background: black;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button.submit {
-    margin-top: 15px;
-    width: 100%;
-    padding: 12px;
-    background: #444;
-    border: none;
-    color: white;
-    cursor: pointer;
-}
-</style>
-</head>
-
-<body>
-
-<header>PRETTY SECRET</header>
-
-<div class="container">
-
-<div class="left" id="secrets"></div>
-
-<div class="right">
-    <h3>Confesá tu secreto</h3>
-
-    <textarea id="text" placeholder="Escribí tu secreto..."></textarea>
-    <input type="number" id="age" placeholder="Edad">
-
-    <div class="gender">
-        <button onclick="setGender('M')">M</button>
-        <button onclick="setGender('F')">F</button>
-        <button onclick="setGender('X')">X</button>
-    </div>
-
-    <button class="submit" onclick="addSecret()">Enviar</button>
-</div>
-
-</div>
-
-<!-- 🔥 FIREBASE -->
-    <script type="module">
+<script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc } 
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -138,12 +22,11 @@ window.setGender = (g) => {
     selectedGender = g;
 };
 
+/* 🔥 GUARDAR SECRETO */
 window.addSecret = async () => {
     const text = document.getElementById("text").value;
     const age = document.getElementById("age").value;
 
-    console.log("CLICK");
-
     if (!text || !age) {
         alert("Completá todo");
         return;
@@ -156,42 +39,42 @@ window.addSecret = async () => {
             gender: selectedGender,
             created: Date.now()
         });
-
-        console.log("GUARDADO OK");
-
-        alert("Se guardó correctamente");
-
-    } catch (e) {
-        console.error("ERROR REAL:", e);
-        alert("ERROR: " + e.message);
-    }
-};
-    const text = document.getElementById("text").value;
-    const age = document.getElementById("age").value;
-
-    console.log("CLICK FUNCIONA");
-
-    if (!text || !age) {
-        alert("Completá todo");
-        return;
-    }
-
-    try {
-        await addDoc(collection(db, "secretos"), {
-            text,
-            age,
-            gender: selectedGender,
-            created: Date.now()
-        });
-
-        console.log("GUARDADO OK");
 
         document.getElementById("text").value = "";
         document.getElementById("age").value = "";
 
+        loadSecrets(); // 🔥 recarga
+
     } catch (e) {
         console.error("ERROR:", e);
+        alert("Error guardando");
     }
 };
+
+/* 🔥 MOSTRAR SECRETOS */
+async function loadSecrets() {
+    const container = document.getElementById("secrets");
+    container.innerHTML = "";
+
+    const q = query(collection(db, "secretos"), orderBy("created", "desc"));
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach(doc => {
+        const data = doc.data();
+
+        const div = document.createElement("div");
+        div.className = "secret";
+
+        div.innerHTML = `
+            <div class="meta">Edad: ${data.age} | ${data.gender}</div>
+            ${data.text}
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+/* 🔥 CARGA INICIAL */
+loadSecrets();
 
 </script>
