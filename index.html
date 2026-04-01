@@ -64,7 +64,6 @@ textarea, input {
 .gender {
     display: flex;
     margin-top: 10px;
-    background: black;
 }
 
 .gender button {
@@ -99,7 +98,6 @@ button.submit {
 <div class="right">
     <h3>Confesá tu secreto</h3>
 
-    <!-- 🔥 INPUTS -->
     <textarea id="text" placeholder="Escribí tu secreto..."></textarea>
     <input type="number" id="age" placeholder="Edad">
 
@@ -109,21 +107,19 @@ button.submit {
         <button onclick="setGender('X')">X</button>
     </div>
 
-    <!-- 🔥 BOTÓN CORRECTO -->
     <button class="submit" id="sendBtn">Enviar</button>
 </div>
 
 </div>
 
-<!-- 🔥 FIREBASE -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy } 
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",
+  apiKey: "TU_API_KEY",
   authDomain: "prettysecret-32c22.firebaseapp.com",
   projectId: "prettysecret-32c22",
   storageBucket: "prettysecret-32c22.firebasestorage.app",
@@ -136,37 +132,63 @@ const db = getFirestore(app);
 
 let selectedGender = "X";
 
-window.setGender = (g) => {
-    selectedGender = g;
-};
+window.setGender = (g) => selectedGender = g;
+
+/* ⏱ TIEMPO */
+function timeAgo(timestamp) {
+    const now = Date.now();
+    const diff = Math.floor((now - timestamp) / 1000);
+
+    if (diff < 60) return "hace unos segundos";
+    if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
+
+    return `hace ${Math.floor(diff / 86400)} días`;
+}
 
 /* 🔥 GUARDAR */
 async function addSecret() {
     const text = document.getElementById("text").value;
     const age = document.getElementById("age").value;
 
-    if (!text || !age) {
-        alert("Completá todo");
-        return;
-    }
+    if (!text || !age) return alert("Completá todo");
 
-    try {
-        await addDoc(collection(db, "secretos"), {
-            text,
-            age,
-            gender: selectedGender,
-            created: Date.now()
-        });
+    await addDoc(collection(db, "secretos"), {
+        text,
+        age,
+        gender: selectedGender,
+        created: Date.now(),
+        likes: 0
+    });
 
-        document.getElementById("text").value = "";
-        document.getElementById("age").value = "";
+    document.getElementById("text").value = "";
+    document.getElementById("age").value = "";
 
-        loadSecrets();
+    loadSecrets();
+}
 
-    } catch (e) {
-        console.error("ERROR:", e);
-        alert("Error guardando");
-    }
+/* ❤️ LIKE */
+async function likeSecret(id, currentLikes) {
+    await updateDoc(doc(db, "secretos", id), {
+        likes: (currentLikes || 0) + 1
+    });
+    loadSecrets();
+}
+
+/* 💬 COMENTAR */
+async function addComment(secretId) {
+    const input = document.getElementById(`c-${secretId}`);
+    const text = input.value;
+
+    if (!text) return;
+
+    await addDoc(collection(db, "secretos", secretId, "comentarios"), {
+        text,
+        created: Date.now()
+    });
+
+    input.value = "";
+    loadSecrets();
 }
 
 /* 🔥 MOSTRAR */
@@ -177,25 +199,51 @@ async function loadSecrets() {
     const q = query(collection(db, "secretos"), orderBy("created", "desc"));
     const snapshot = await getDocs(q);
 
-    snapshot.forEach(doc => {
-        const data = doc.data();
+    for (const d of snapshot.docs) {
+        const data = d.data();
+
+        const commentsSnap = await getDocs(collection(db, "secretos", d.id, "comentarios"));
+
+        let commentsHTML = "";
+        commentsSnap.forEach(c => {
+            commentsHTML += `<div style="font-size:12px;">• ${c.data().text}</div>`;
+        });
 
         const div = document.createElement("div");
         div.className = "secret";
 
         div.innerHTML = `
-            <div class="meta">Edad: ${data.age} | ${data.gender}</div>
-            ${data.text}
+            <div class="meta">
+                Edad: ${data.age} | ${data.gender} • ${timeAgo(data.created)}
+            </div>
+            <div>${data.text}</div>
+
+            <div style="margin-top:10px;">
+                ❤️ ${data.likes || 0}
+                <button onclick="likeSecret('${d.id}', ${data.likes || 0})">Like</button>
+            </div>
+
+            <div style="margin-top:10px;">
+                <input id="c-${d.id}" placeholder="Comentar..." style="font-size:12px;">
+                <button onclick="addComment('${d.id}')">Enviar</button>
+            </div>
+
+            <div style="margin-top:10px;">
+                ${commentsHTML}
+            </div>
         `;
 
         container.appendChild(div);
-    });
+    }
 }
 
-/* 🔥 CONEXIÓN BOTÓN */
+/* 🔗 CONEXIÓN */
 document.getElementById("sendBtn").addEventListener("click", addSecret);
 
-/* 🔥 INICIO */
+window.likeSecret = likeSecret;
+window.addComment = addComment;
+
+/* 🚀 INICIO */
 loadSecrets();
 
 </script>
