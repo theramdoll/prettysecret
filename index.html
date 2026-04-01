@@ -23,7 +23,7 @@ window.setGender = (g) => {
 };
 
 /* 🔥 GUARDAR SECRETO */
-window.addSecret = async () => {
+async function addSecret() {
     const text = document.getElementById("text").value;
     const age = document.getElementById("age").value;
 
@@ -43,13 +43,13 @@ window.addSecret = async () => {
         document.getElementById("text").value = "";
         document.getElementById("age").value = "";
 
-        loadSecrets(); // 🔥 recarga
+        loadSecrets();
 
     } catch (e) {
         console.error("ERROR:", e);
         alert("Error guardando");
     }
-};
+}
 
 /* 🔥 MOSTRAR SECRETOS */
 async function loadSecrets() {
@@ -73,6 +73,9 @@ async function loadSecrets() {
         container.appendChild(div);
     });
 }
+
+/* 🔥 CONECTAR BOTÓN (CLAVE) */
+document.getElementById("sendBtn").addEventListener("click", addSecret);
 
 /* 🔥 CARGA INICIAL */
 loadSecrets();
