@@ -142,6 +142,33 @@ window.addSecret = async () => {
     const text = document.getElementById("text").value;
     const age = document.getElementById("age").value;
 
+    console.log("CLICK");
+
+    if (!text || !age) {
+        alert("Completá todo");
+        return;
+    }
+
+    try {
+        await addDoc(collection(db, "secretos"), {
+            text,
+            age,
+            gender: selectedGender,
+            created: Date.now()
+        });
+
+        console.log("GUARDADO OK");
+
+        alert("Se guardó correctamente");
+
+    } catch (e) {
+        console.error("ERROR REAL:", e);
+        alert("ERROR: " + e.message);
+    }
+};
+    const text = document.getElementById("text").value;
+    const age = document.getElementById("age").value;
+
     console.log("CLICK FUNCIONA");
 
     if (!text || !age) {
