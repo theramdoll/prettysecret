@@ -96,7 +96,7 @@ button.submit {
 <div class="left" id="secrets"></div>
 
 <div class="right">
-    <h3>Confesá tu secreto</h3>
+    <h3>Confesá tu secreto...</h3>
 
     <textarea id="text" placeholder="Escribí tu secreto..."></textarea>
     <input type="number" id="age" placeholder="Edad">
@@ -169,6 +169,23 @@ async function addSecret() {
 
 /* ❤️ LIKE */
 async function likeSecret(id, currentLikes) {
+
+    const liked = JSON.parse(localStorage.getItem("likedSecrets") || "[]");
+
+    if (liked.includes(id)) {
+        alert("Ya diste like a este secreto");
+        return;
+    }
+
+    await updateDoc(doc(db, "secretos", id), {
+        likes: (currentLikes || 0) + 1
+    });
+
+    liked.push(id);
+    localStorage.setItem("likedSecrets", JSON.stringify(liked));
+
+    loadSecrets();
+}
     await updateDoc(doc(db, "secretos", id), {
         likes: (currentLikes || 0) + 1
     });
