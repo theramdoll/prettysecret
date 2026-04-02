@@ -84,7 +84,6 @@ button.submit {
     border: none;
     color: white;
     cursor: pointer;
-    font-family: 'Reddit Sans', sans-serif;
 }
 </style>
 </head>
@@ -117,7 +116,7 @@ button.submit {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy } 
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -159,7 +158,12 @@ async function addSecret() {
         text,
         age,
         gender: selectedGender,
-        created: Date.now()
+        created: Date.now(),
+        reactions: {
+            neutral: 0,
+            shy: 0,
+            melt: 0
+        }
     });
 
     document.getElementById("text").value = "";
@@ -167,6 +171,41 @@ async function addSecret() {
 
     loadSecrets();
 }
+
+/* 😶🤭🫠 REACCIONES */
+window.react = async (id, type, current) => {
+    let reacted = JSON.parse(localStorage.getItem("reactedSecrets") || "{}");
+
+    if (reacted[id]) {
+        alert("Ya reaccionaste");
+        return;
+    }
+
+    await updateDoc(doc(db, "secretos", id), {
+        [`reactions.${type}`]: (current || 0) + 1
+    });
+
+    reacted[id] = true;
+    localStorage.setItem("reactedSecrets", JSON.stringify(reacted));
+
+    loadSecrets();
+};
+
+/* 💬 COMENTARIOS */
+window.addComment = async (id) => {
+    const input = document.getElementById(`c-${id}`);
+    const text = input.value;
+
+    if (!text) return;
+
+    await addDoc(collection(db, "secretos", id, "comentarios"), {
+        text,
+        created: Date.now()
+    });
+
+    input.value = "";
+    loadSecrets();
+};
 
 /* 🔥 MOSTRAR */
 async function loadSecrets() {
@@ -176,8 +215,17 @@ async function loadSecrets() {
     const q = query(collection(db, "secretos"), orderBy("created", "desc"));
     const snapshot = await getDocs(q);
 
-    snapshot.forEach(docSnap => {
-        const data = docSnap.data();
+    for (const d of snapshot.docs) {
+        const data = d.data();
+
+        const reactions = data.reactions || { neutral:0, shy:0, melt:0 };
+
+        const commentsSnap = await getDocs(collection(db, "secretos", d.id, "comentarios"));
+
+        let commentsHTML = "";
+        commentsSnap.forEach(c => {
+            commentsHTML += `<div style="font-size:12px;">• ${c.data().text}</div>`;
+        });
 
         const div = document.createElement("div");
         div.className = "secret";
@@ -190,11 +238,40 @@ async function loadSecrets() {
             <div style="margin-top:10px; font-size:18px;">
                 ${data.text}
             </div>
+
+            <div style="margin-top:10px;">
+                😶 ${reactions.neutral} 
+                🤭 ${reactions.shy} 
+                🫠 ${reactions.melt}
+
+                <button onclick="toggle('${d.id}')">Reaccionar</button>
+
+                <div id="r-${d.id}" style="display:none;">
+                    <button onclick="react('${d.id}', 'neutral', ${reactions.neutral})">😶</button>
+                    <button onclick="react('${d.id}', 'shy', ${reactions.shy})">🤭</button>
+                    <button onclick="react('${d.id}', 'melt', ${reactions.melt})">🫠</button>
+                </div>
+            </div>
+
+            <div style="margin-top:10px;">
+                <input id="c-${d.id}" placeholder="Comentario...">
+                <button onclick="addComment('${d.id}')">Enviar</button>
+            </div>
+
+            <div style="margin-top:10px;">
+                ${commentsHTML}
+            </div>
         `;
 
         container.appendChild(div);
-    });
+    }
 }
+
+/* 🔽 TOGGLE */
+window.toggle = (id) => {
+    const el = document.getElementById(`r-${id}`);
+    el.style.display = el.style.display === "none" ? "block" : "none";
+};
 
 /* 🔗 */
 document.getElementById("sendBtn").addEventListener("click", addSecret);
