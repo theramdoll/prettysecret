@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pretty Secret</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Reddit+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
 body {
     margin: 0;
     background: #0d0d0d;
     color: white;
-    font-family: Consolas, monospace;
+    font-family: 'Reddit Sans', sans-serif;
 }
 
 header {
@@ -59,26 +59,21 @@ textarea, input {
     padding: 10px;
     border-radius: 5px;
     margin-top: 10px;
+    font-family: 'Reddit Sans', sans-serif;
 }
 
-.gender, .emoji-selector {
+.gender {
     display: flex;
     margin-top: 10px;
 }
 
-.gender button, .emoji-selector button {
+.gender button {
     flex: 1;
     padding: 10px;
     background: black;
     color: white;
     border: 1px solid #333;
     cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
-}
-
-.emoji-selector button.active {
-    background: #222;
-    transform: scale(1.2);
 }
 
 button.submit {
@@ -89,6 +84,7 @@ button.submit {
     border: none;
     color: white;
     cursor: pointer;
+    font-family: 'Reddit Sans', sans-serif;
 }
 </style>
 </head>
@@ -111,12 +107,6 @@ button.submit {
         <button onclick="setGender('M')">M</button>
         <button onclick="setGender('F')">F</button>
         <button onclick="setGender('X')">X</button>
-    </div>
-
-    <div class="emoji-selector">
-        <button onclick="setEmoji('😶')">😶</button>
-        <button onclick="setEmoji('🤭')">🤭</button>
-        <button onclick="setEmoji('🫠')">🫠</button>
     </div>
 
     <button class="submit" id="sendBtn">Enviar</button>
@@ -143,19 +133,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let selectedGender = "X";
-let selectedEmoji = "😶";
 
 window.setGender = (g) => selectedGender = g;
-
-window.setEmoji = (emoji) => {
-    selectedEmoji = emoji;
-
-    document.querySelectorAll(".emoji-selector button").forEach(btn => {
-        btn.classList.remove("active");
-    });
-
-    event.target.classList.add("active");
-};
 
 /* ⏱ TIEMPO */
 function timeAgo(timestamp) {
@@ -180,7 +159,6 @@ async function addSecret() {
         text,
         age,
         gender: selectedGender,
-        emoji: selectedEmoji,
         created: Date.now()
     });
 
@@ -206,55 +184,16 @@ async function loadSecrets() {
 
         div.innerHTML = `
             <div class="meta">
-                ${data.emoji || "😶"} • Edad: ${data.age} | ${data.gender} • ${timeAgo(data.created)}
+                Edad: ${data.age} | ${data.gender} • ${timeAgo(data.created)}
             </div>
 
             <div style="margin-top:10px; font-size:18px;">
                 ${data.text}
             </div>
-
-            <div style="margin-top:10px;">
-                <input id="c-${docSnap.id}" placeholder="¿Qué le dirías?" style="font-size:12px;">
-                <button onclick="addComment('${docSnap.id}')">Enviar</button>
-            </div>
-
-            <div id="comments-${docSnap.id}" style="margin-top:10px;"></div>
         `;
 
         container.appendChild(div);
-
-        loadComments(docSnap.id);
     });
-}
-
-/* 💬 COMENTARIOS */
-window.addComment = async (id) => {
-    const input = document.getElementById(`c-${id}`);
-    const text = input.value;
-
-    if (!text) return;
-
-    await addDoc(collection(db, "secretos", id, "comentarios"), {
-        text,
-        created: Date.now()
-    });
-
-    input.value = "";
-    loadComments(id);
-};
-
-async function loadComments(id) {
-    const container = document.getElementById(`comments-${id}`);
-    if (!container) return;
-
-    const snap = await getDocs(collection(db, "secretos", id, "comentarios"));
-
-    let html = "";
-    snap.forEach(c => {
-        html += `<div style="font-size:12px;">• ${c.data().text}</div>`;
-    });
-
-    container.innerHTML = html;
 }
 
 /* 🔗 */
