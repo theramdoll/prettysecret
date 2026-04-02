@@ -1,165 +1,223 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pretty Secret</title>
-    <link href="https://googleapis.com" rel="stylesheet">
-    <style>
-        body { margin: 0; background: #080808; color: white; font-family: 'Consolas', monospace; }
-        header { text-align: center; padding: 25px; font-size: 30px; font-family: 'Orbitron', sans-serif; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        
-        .container { display: flex; height: 90vh; }
-        .left { width: 60%; padding: 20px; overflow-y: auto; border-right: 1px solid #1a1a1a; }
-        .right { width: 40%; padding: 25px; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pretty Secret</title>
 
-        /* Colores por Género */
-        .secret { background: #111; padding: 18px; margin-bottom: 20px; border-radius: 12px; transition: 0.3s; }
-        .gender-F { border-left: 5px solid #ff007f; border-right: 1px solid #331a26; } /* Rosa */
-        .gender-M { border-left: 5px solid #00d4ff; border-right: 1px solid #1a2b33; } /* Celeste */
-        .gender-X { border-left: 5px solid #555555; border-right: 1px solid #222222; } /* Gris */
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
 
-        .meta { font-size: 11px; color: #666; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .secret-text { font-size: 16px; line-height: 1.5; color: #eee; }
+<style>
+body {
+    margin: 0;
+    background: #0d0d0d;
+    color: white;
+    font-family: Consolas, monospace;
+}
 
-        textarea, input { width: 100%; background: #000; border: 1px solid #222; color: white; padding: 12px; border-radius: 8px; margin-top: 10px; box-sizing: border-box; outline: none; }
-        textarea:focus, input:focus { border-color: #444; }
+header {
+    text-align: center;
+    padding: 20px;
+    font-size: 40px;
+    font-family: 'Orbitron', sans-serif;
+}
 
-        .gender-selector { display: flex; gap: 8px; margin-top: 12px; }
-        .gender-selector button { flex: 1; padding: 12px; background: #000; color: #444; border: 1px solid #222; cursor: pointer; border-radius: 6px; font-weight: bold; }
-        .gender-selector button.active.F { background: #ff007f; color: white; border-color: #ff007f; }
-        .gender-selector button.active.M { background: #00d4ff; color: white; border-color: #00d4ff; }
-        .gender-selector button.active.X { background: #555; color: white; border-color: #555; }
+.container {
+    display: flex;
+    height: 90vh;
+}
 
-        .submit { margin-top: 20px; width: 100%; padding: 15px; background: #fff; border: none; color: #000; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+.left {
+    width: 60%;
+    padding: 20px;
+    overflow-y: scroll;
+    border-right: 1px solid #333;
+}
 
-        /* Reacciones */
-        .react-bar { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .react-opt { background: #1a1a1a; border: 1px solid #222; padding: 6px 12px; border-radius: 20px; color: #aaa; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .react-opt:hover { background: #252525; color: #fff; border-color: #444; }
-        .my-choice { background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 20px; border: 1px dashed #444; font-size: 13px; color: #00ffcc; }
+.secret {
+    background: #1a1a1a;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+}
 
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
-    </style>
+.meta {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.right {
+    width: 40%;
+    padding: 20px;
+}
+
+textarea, input {
+    width: 100%;
+    background: #111;
+    border: none;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.emoji-selector {
+    display: flex;
+    margin-top: 10px;
+}
+
+.emoji-selector button {
+    flex: 1;
+    padding: 12px;
+    font-size: 22px;
+    background: black;
+    border: 1px solid #333;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.emoji-selector button.active {
+    background: #222;
+    transform: scale(1.25);
+}
+
+button.submit {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    background: #444;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+</style>
 </head>
+
 <body>
 
 <header>PRETTY SECRET</header>
 
 <div class="container">
-    <div class="left" id="secrets"></div>
 
-    <div class="right">
-        <h3 style="margin-top:0;">Confesá tu secreto</h3>
-        <textarea id="text" placeholder="Escribí tu secreto aquí..."></textarea>
-        <input type="number" id="age" placeholder="Tu edad">
-        
-        <div class="gender-selector" id="gSelector">
-            <button onclick="setGender('M', this)" class="M">M</button>
-            <button onclick="setGender('F', this)" class="F">F</button>
-            <button onclick="setGender('X', this)" class="active X">X</button>
-        </div>
+<div class="left" id="secrets"></div>
 
-        <button class="submit" id="sendBtn">Publicar Secreto</button>
+<div class="right">
+    <h3>Confesá tu secreto</h3>
+
+    <textarea id="text" placeholder="Escribí tu secreto..."></textarea>
+    <input type="number" id="age" placeholder="Edad">
+
+    <div class="emoji-selector">
+        <button onclick="setEmoji('😶')">😶</button>
+        <button onclick="setEmoji('🤭')">🤭</button>
+        <button onclick="setEmoji('🫠')">🫠</button>
     </div>
+
+    <button class="submit" id="sendBtn">Enviar</button>
+</div>
+
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://gstatic.com";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc } from "https://gstatic.com";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",
-        authDomain: "://firebaseapp.com",
-        projectId: "prettysecret-32c22",
-        storageBucket: "prettysecret-32c22.firebasestorage.app",
-        messagingSenderId: "1011608096795",
-        appId: "1:1011608096795:web:1e0ec73136036f877628be"
-    };
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    let selectedGender = "X";
+const firebaseConfig = {
+  apiKey: "AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",
+  authDomain: "prettysecret-32c22.firebaseapp.com",
+  projectId: "prettysecret-32c22",
+  storageBucket: "prettysecret-32c22.firebasestorage.app",
+  messagingSenderId: "1011608096795",
+  appId: "1:1011608096795:web:1e0ec73136036f877628be"
+};
 
-    window.setGender = (g, btn) => {
-        selectedGender = g;
-        document.querySelectorAll('#gSelector button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    function timeAgo(t) {
-        const d = Math.floor((Date.now() - t) / 1000);
-        if (d < 60) return "ahora";
-        if (d < 3600) return `${Math.floor(d/60)}m`;
-        if (d < 86400) return `${Math.floor(d/3600)}h`;
-        const dias = Math.floor(d/86400);
-        return `${dias} ${dias === 1 ? 'día' : 'días'}`;
-    }
+let selectedEmoji = "😶";
 
-    async function addSecret() {
-        const t = document.getElementById("text").value;
-        const a = document.getElementById("age").value;
-        if (!t || !a) return alert("Completá todo");
+window.setEmoji = (emoji) => {
+    selectedEmoji = emoji;
 
-        await addDoc(collection(db, "secretos"), {
-            text: t, age: a, gender: selectedGender, created: Date.now(),
-            reactions: { neutral: 0, shy: 0, melt: 0 }
-        });
-        document.getElementById("text").value = "";
-        loadSecrets();
-    }
+    document.querySelectorAll(".emoji-selector button").forEach(btn => {
+        btn.classList.remove("active");
+    });
 
-    window.react = async (id, type, currentVal) => {
-        let storage = JSON.parse(localStorage.getItem("my_reacts") || "{}");
-        if (storage[id]) return;
+    event.target.classList.add("active");
+};
 
-        await updateDoc(doc(db, "secretos", id), { [`reactions.${type}`]: (currentVal || 0) + 1 });
-        storage[id] = type; 
-        localStorage.setItem("my_reacts", JSON.stringify(storage));
-        loadSecrets();
-    };
+/* ⏱ TIEMPO */
+function timeAgo(timestamp) {
+    const now = Date.now();
+    const diff = Math.floor((now - timestamp) / 1000);
 
-    async function loadSecrets() {
-        const container = document.getElementById("secrets");
-        const q = query(collection(db, "secretos"), orderBy("created", "desc"));
-        const snap = await getDocs(q);
-        const myReacts = JSON.parse(localStorage.getItem("my_reacts") || "{}");
+    if (diff < 60) return "hace unos segundos";
+    if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
 
-        container.innerHTML = "";
-        snap.forEach(d => {
-            const data = d.data();
-            const id = d.id;
-            const r = data.reactions || { neutral:0, shy:0, melt:0 };
-            const myChoice = myReacts[id];
+    return `hace ${Math.floor(diff / 86400)} días`;
+}
 
-            const div = document.createElement("div");
-            // Se aplica la clase de color según el género
-            div.className = `secret gender-${data.gender || 'X'}`;
-            
-            let reactHTML = "";
-            if (myChoice) {
-                const icons = { neutral: "😶", shy: "🤭", melt: "🫠" };
-                reactHTML = `<div class="my-choice">Tu reacción: ${icons[myChoice]} ${r[myChoice] || 1}</div>`;
-            } else {
-                reactHTML = `
-                    <button class="react-opt" onclick="react('${id}','neutral',${r.neutral})">😶 ${r.neutral || 0}</button>
-                    <button class="react-opt" onclick="react('${id}','shy',${r.shy})">🤭 ${r.shy || 0}</button>
-                    <button class="react-opt" onclick="react('${id}','melt',${r.melt})">🫠 ${r.melt || 0}</button>
-                `;
-            }
+/* 🔥 GUARDAR */
+async function addSecret() {
+    const text = document.getElementById("text").value;
+    const age = document.getElementById("age").value;
 
-            div.innerHTML = `
-                <div class="meta">Edad: ${data.age} | G: ${data.gender} • ${timeAgo(data.created)}</div>
-                <div class="secret-text">${data.text}</div>
-                <div class="react-bar">${reactHTML}</div>
-            `;
-            container.appendChild(div);
-        });
-    }
+    if (!text || !age) return alert("Completá todo");
 
-    document.getElementById("sendBtn").onclick = addSecret;
+    await addDoc(collection(db, "secretos"), {
+        text,
+        age,
+        emoji: selectedEmoji,
+        created: Date.now()
+    });
+
+    document.getElementById("text").value = "";
+    document.getElementById("age").value = "";
+
     loadSecrets();
+}
+
+/* 🔥 MOSTRAR */
+async function loadSecrets() {
+    const container = document.getElementById("secrets");
+    container.innerHTML = "";
+
+    const q = query(collection(db, "secretos"), orderBy("created", "desc"));
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+
+        const div = document.createElement("div");
+        div.className = "secret";
+
+        div.innerHTML = `
+            <div class="meta">
+                Edad: ${data.age} • ${timeAgo(data.created)}
+            </div>
+
+            <div style="font-size:18px; margin-top:10px;">
+                ${data.text}
+            </div>
+
+            <div style="margin-top:10px; font-size:24px;">
+                ${data.emoji || "😶"}
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+/* 🔗 */
+document.getElementById("sendBtn").addEventListener("click", addSecret);
+
+loadSecrets();
+
 </script>
+
 </body>
 </html>
