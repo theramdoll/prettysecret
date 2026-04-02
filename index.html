@@ -61,16 +61,16 @@ textarea, input {
     margin-top: 10px;
 }
 
-.emoji-selector {
+.gender, .emoji-selector {
     display: flex;
     margin-top: 10px;
 }
 
-.emoji-selector button {
+.gender button, .emoji-selector button {
     flex: 1;
-    padding: 12px;
-    font-size: 22px;
+    padding: 10px;
     background: black;
+    color: white;
     border: 1px solid #333;
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
@@ -78,7 +78,7 @@ textarea, input {
 
 .emoji-selector button.active {
     background: #222;
-    transform: scale(1.25);
+    transform: scale(1.2);
 }
 
 button.submit {
@@ -106,6 +106,12 @@ button.submit {
 
     <textarea id="text" placeholder="Escribí tu secreto..."></textarea>
     <input type="number" id="age" placeholder="Edad">
+
+    <div class="gender">
+        <button onclick="setGender('M')">M</button>
+        <button onclick="setGender('F')">F</button>
+        <button onclick="setGender('X')">X</button>
+    </div>
 
     <div class="emoji-selector">
         <button onclick="setEmoji('😶')">😶</button>
@@ -136,7 +142,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let selectedGender = "X";
 let selectedEmoji = "😶";
+
+window.setGender = (g) => selectedGender = g;
 
 window.setEmoji = (emoji) => {
     selectedEmoji = emoji;
@@ -170,6 +179,7 @@ async function addSecret() {
     await addDoc(collection(db, "secretos"), {
         text,
         age,
+        gender: selectedGender,
         emoji: selectedEmoji,
         created: Date.now()
     });
@@ -196,20 +206,55 @@ async function loadSecrets() {
 
         div.innerHTML = `
             <div class="meta">
-                Edad: ${data.age} • ${timeAgo(data.created)}
+                ${data.emoji || "😶"} • Edad: ${data.age} | ${data.gender} • ${timeAgo(data.created)}
             </div>
 
-            <div style="font-size:18px; margin-top:10px;">
+            <div style="margin-top:10px; font-size:18px;">
                 ${data.text}
             </div>
 
-            <div style="margin-top:10px; font-size:24px;">
-                ${data.emoji || "😶"}
+            <div style="margin-top:10px;">
+                <input id="c-${docSnap.id}" placeholder="¿Qué le dirías?" style="font-size:12px;">
+                <button onclick="addComment('${docSnap.id}')">Enviar</button>
             </div>
+
+            <div id="comments-${docSnap.id}" style="margin-top:10px;"></div>
         `;
 
         container.appendChild(div);
+
+        loadComments(docSnap.id);
     });
+}
+
+/* 💬 COMENTARIOS */
+window.addComment = async (id) => {
+    const input = document.getElementById(`c-${id}`);
+    const text = input.value;
+
+    if (!text) return;
+
+    await addDoc(collection(db, "secretos", id, "comentarios"), {
+        text,
+        created: Date.now()
+    });
+
+    input.value = "";
+    loadComments(id);
+};
+
+async function loadComments(id) {
+    const container = document.getElementById(`comments-${id}`);
+    if (!container) return;
+
+    const snap = await getDocs(collection(db, "secretos", id, "comentarios"));
+
+    let html = "";
+    snap.forEach(c => {
+        html += `<div style="font-size:12px;">• ${c.data().text}</div>`;
+    });
+
+    container.innerHTML = html;
 }
 
 /* 🔗 */
