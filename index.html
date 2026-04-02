@@ -6,39 +6,41 @@
     <title>Pretty Secret</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        body { margin: 0; background: #0d0d0d; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        header { text-align: center; padding: 30px; font-size: 35px; font-family: 'Orbitron', sans-serif; letter-spacing: 4px; color: #fff; text-shadow: 0 0 10px #555; }
+        body { margin: 0; background: #080808; color: white; font-family: 'Consolas', monospace; }
+        header { text-align: center; padding: 25px; font-size: 30px; font-family: 'Orbitron', sans-serif; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
         
-        .container { display: flex; height: calc(100vh - 100px); }
-        .left { width: 65%; padding: 20px; overflow-y: auto; border-right: 1px solid #222; }
-        .right { width: 35%; padding: 30px; box-sizing: border-box; }
+        .container { display: flex; height: 90vh; }
+        .left { width: 60%; padding: 20px; overflow-y: auto; border-right: 1px solid #1a1a1a; }
+        .right { width: 40%; padding: 25px; box-sizing: border-box; }
 
-        .secret { background: #161616; padding: 20px; margin-bottom: 20px; border-radius: 12px; border: 1px solid #222; transition: 0.3s; }
-        .secret:hover { border-color: #444; }
-        .meta { font-size: 11px; color: #777; text-transform: uppercase; margin-bottom: 10px; font-family: monospace; }
-        
-        textarea, input { width: 100%; background: #111; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; margin-top: 10px; box-sizing: border-box; outline: none; }
-        textarea:focus, input:focus { border-color: #666; }
-        textarea { height: 100px; resize: none; }
+        /* Colores por Género */
+        .secret { background: #111; padding: 18px; margin-bottom: 20px; border-radius: 12px; transition: 0.3s; }
+        .gender-F { border-left: 5px solid #ff007f; border-right: 1px solid #331a26; } /* Rosa */
+        .gender-M { border-left: 5px solid #00d4ff; border-right: 1px solid #1a2b33; } /* Celeste */
+        .gender-X { border-left: 5px solid #555555; border-right: 1px solid #222222; } /* Gris */
 
-        .gender { display: flex; gap: 10px; margin-top: 15px; }
-        .gender button { flex: 1; padding: 12px; background: #111; color: #666; border: 1px solid #333; border-radius: 6px; cursor: pointer; transition: 0.3s; font-weight: bold; }
-        .gender button.active { background: #fff; color: #000; border-color: #fff; }
+        .meta { font-size: 11px; color: #666; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .secret-text { font-size: 16px; line-height: 1.5; color: #eee; }
+
+        textarea, input { width: 100%; background: #000; border: 1px solid #222; color: white; padding: 12px; border-radius: 8px; margin-top: 10px; box-sizing: border-box; outline: none; }
+        textarea:focus, input:focus { border-color: #444; }
+
+        .gender-selector { display: flex; gap: 8px; margin-top: 12px; }
+        .gender-selector button { flex: 1; padding: 12px; background: #000; color: #444; border: 1px solid #222; cursor: pointer; border-radius: 6px; font-weight: bold; }
+        .gender-selector button.active.F { background: #ff007f; color: white; border-color: #ff007f; }
+        .gender-selector button.active.M { background: #00d4ff; color: white; border-color: #00d4ff; }
+        .gender-selector button.active.X { background: #555; color: white; border-color: #555; }
 
         .submit { margin-top: 20px; width: 100%; padding: 15px; background: #fff; border: none; color: #000; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
-        .submit:hover { background: #ccc; }
 
-        .react-btn { background: none; border: 1px solid #333; color: #aaa; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-left: 10px; }
-        .react-grid { display: flex; gap: 10px; margin-top: 10px; background: #111; padding: 10px; border-radius: 8px; }
-        .react-grid button { background: none; border: none; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
-        .react-grid button:hover { transform: scale(1.3); }
-        
-        .comment-section { border-top: 1px solid #222; margin-top: 15px; padding-top: 10px; }
-        .comment { font-size: 13px; color: #bbb; margin-bottom: 5px; padding-left: 5px; border-left: 2px solid #333; }
+        /* Reacciones */
+        .react-bar { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .react-opt { background: #1a1a1a; border: 1px solid #222; padding: 6px 12px; border-radius: 20px; color: #aaa; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .react-opt:hover { background: #252525; color: #fff; border-color: #444; }
+        .my-choice { background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 20px; border: 1px dashed #444; font-size: 13px; color: #00ffcc; }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -49,17 +51,17 @@
     <div class="left" id="secrets"></div>
 
     <div class="right">
-        <h3>Confesá tu secreto</h3>
-        <textarea id="text" placeholder="¿Qué estás pensando?"></textarea>
+        <h3 style="margin-top:0;">Confesá tu secreto</h3>
+        <textarea id="text" placeholder="Escribí tu secreto aquí..."></textarea>
         <input type="number" id="age" placeholder="Tu edad">
-
-        <div class="gender" id="genderGroup">
-            <button onclick="setGender('M', this)">M</button>
-            <button onclick="setGender('F', this)">F</button>
-            <button onclick="setGender('X', this)" class="active">X</button>
+        
+        <div class="gender-selector" id="gSelector">
+            <button onclick="setGender('M', this)" class="M">M</button>
+            <button onclick="setGender('F', this)" class="F">F</button>
+            <button onclick="setGender('X', this)" class="active X">X</button>
         </div>
 
-        <button class="submit" id="sendBtn">Publicar secreto</button>
+        <button class="submit" id="sendBtn">Publicar Secreto</button>
     </div>
 </div>
 
@@ -78,115 +80,86 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
     let selectedGender = "X";
 
     window.setGender = (g, btn) => {
         selectedGender = g;
-        document.querySelectorAll('#genderGroup button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#gSelector button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
     };
 
-    function timeAgo(timestamp) {
-        const diff = Math.floor((Date.now() - timestamp) / 1000);
-        if (diff < 60) return "hace unos segundos";
-        if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`;
-        if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
-        const dias = Math.floor(diff / 86400);
-        return `hace ${dias} ${dias === 1 ? 'día' : 'días'}`;
+    function timeAgo(t) {
+        const d = Math.floor((Date.now() - t) / 1000);
+        if (d < 60) return "ahora";
+        if (d < 3600) return `${Math.floor(d/60)}m`;
+        if (d < 86400) return `${Math.floor(d/3600)}h`;
+        const dias = Math.floor(d/86400);
+        return `${dias} ${dias === 1 ? 'día' : 'días'}`;
     }
 
     async function addSecret() {
-        const text = document.getElementById("text").value;
-        const age = document.getElementById("age").value;
-        if (!text || !age) return alert("Por favor, completa los campos");
+        const t = document.getElementById("text").value;
+        const a = document.getElementById("age").value;
+        if (!t || !a) return alert("Completá todo");
 
         await addDoc(collection(db, "secretos"), {
-            text, age, gender: selectedGender, created: Date.now(),
+            text: t, age: a, gender: selectedGender, created: Date.now(),
             reactions: { neutral: 0, shy: 0, melt: 0 }
         });
-
         document.getElementById("text").value = "";
-        document.getElementById("age").value = "";
         loadSecrets();
     }
 
-    window.react = async (secretId, type, current) => {
-        let reacted = JSON.parse(localStorage.getItem("reactedSecrets") || "{}");
-        if (reacted[secretId]) return alert("Ya reaccionaste a esto");
+    window.react = async (id, type, currentVal) => {
+        let storage = JSON.parse(localStorage.getItem("my_reacts") || "{}");
+        if (storage[id]) return;
 
-        await updateDoc(doc(db, "secretos", secretId), {
-            [`reactions.${type}`]: (current || 0) + 1
-        });
-
-        reacted[secretId] = true;
-        localStorage.setItem("reactedSecrets", JSON.stringify(reacted));
-        loadSecrets();
-    };
-
-    window.toggleReactions = (id) => {
-        const el = document.getElementById(`r-${id}`);
-        el.style.display = el.style.display === "none" ? "flex" : "none";
-    };
-
-    window.addComment = async (secretId) => {
-        const input = document.getElementById(`c-${secretId}`);
-        if (!input.value) return;
-        await addDoc(collection(db, "secretos", secretId, "comentarios"), {
-            text: input.value, created: Date.now()
-        });
-        input.value = "";
+        await updateDoc(doc(db, "secretos", id), { [`reactions.${type}`]: (currentVal || 0) + 1 });
+        storage[id] = type; 
+        localStorage.setItem("my_reacts", JSON.stringify(storage));
         loadSecrets();
     };
 
     async function loadSecrets() {
         const container = document.getElementById("secrets");
         const q = query(collection(db, "secretos"), orderBy("created", "desc"));
-        const snapshot = await getDocs(q);
+        const snap = await getDocs(q);
+        const myReacts = JSON.parse(localStorage.getItem("my_reacts") || "{}");
 
         container.innerHTML = "";
-
-        for (const d of snapshot.docs) {
+        snap.forEach(d => {
             const data = d.data();
-            const reactions = data.reactions || { neutral: 0, shy: 0, melt: 0 };
-            
-            const commentsSnap = await getDocs(collection(db, "secretos", d.id, "comentarios"));
-            let commentsHTML = "";
-            commentsSnap.forEach(c => {
-                commentsHTML += `<div class="comment">• ${c.data().text}</div>`;
-            });
+            const id = d.id;
+            const r = data.reactions || { neutral:0, shy:0, melt:0 };
+            const myChoice = myReacts[id];
 
             const div = document.createElement("div");
-            div.className = "secret";
+            // Se aplica la clase de color según el género
+            div.className = `secret gender-${data.gender || 'X'}`;
+            
+            let reactHTML = "";
+            if (myChoice) {
+                const icons = { neutral: "😶", shy: "🤭", melt: "🫠" };
+                reactHTML = `<div class="my-choice">Tu reacción: ${icons[myChoice]} ${r[myChoice] || 1}</div>`;
+            } else {
+                reactHTML = `
+                    <button class="react-opt" onclick="react('${id}','neutral',${r.neutral})">😶 ${r.neutral || 0}</button>
+                    <button class="react-opt" onclick="react('${id}','shy',${r.shy})">🤭 ${r.shy || 0}</button>
+                    <button class="react-opt" onclick="react('${id}','melt',${r.melt})">🫠 ${r.melt || 0}</button>
+                `;
+            }
+
             div.innerHTML = `
-                <div class="meta">Edad: ${data.age} | ${data.gender} • ${timeAgo(data.created)}</div>
-                <div style="line-height:1.5;">${data.text}</div>
-                <div style="margin-top:15px; display:flex; align-items:center;">
-                    <span title="Neutral">😶 ${reactions.neutral || 0}</span>&nbsp;&nbsp;
-                    <span title="Tímido">🤭 ${reactions.shy || 0}</span>&nbsp;&nbsp;
-                    <span title="Derritiéndose">🫠 ${reactions.melt || 0}</span>
-                    <button class="react-btn" onclick="toggleReactions('${d.id}')">Reaccionar</button>
-                </div>
-                <div id="r-${d.id}" class="react-grid" style="display:none;">
-                    <button onclick="react('${d.id}', 'neutral', ${reactions.neutral})">😶</button>
-                    <button onclick="react('${d.id}', 'shy', ${reactions.shy})">🤭</button>
-                    <button onclick="react('${d.id}', 'melt', ${reactions.melt})">🫠</button>
-                </div>
-                <div class="comment-section">
-                    <div style="display:flex; gap:5px;">
-                        <input id="c-${d.id}" placeholder="Escribe un comentario..." style="font-size:12px; margin-top:0;">
-                        <button onclick="addComment('${d.id}')" style="background:#333; border:none; color:white; border-radius:5px; padding:0 15px; cursor:pointer;">Enviar</button>
-                    </div>
-                    <div style="margin-top:10px;">${commentsHTML}</div>
-                </div>
+                <div class="meta">Edad: ${data.age} | G: ${data.gender} • ${timeAgo(data.created)}</div>
+                <div class="secret-text">${data.text}</div>
+                <div class="react-bar">${reactHTML}</div>
             `;
             container.appendChild(div);
-        }
+        });
     }
 
-    document.getElementById("sendBtn").addEventListener("click", addSecret);
+    document.getElementById("sendBtn").onclick = addSecret;
     loadSecrets();
 </script>
-
 </body>
 </html>
