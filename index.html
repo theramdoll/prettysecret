@@ -8,26 +8,61 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Reddit+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;background:#0d0d0d;color:white;font-family:'Reddit Sans',sans-serif;}
-header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron',sans-serif;}
-.container{display:flex;height:90vh;}
-.left{width:60%;padding:20px;overflow-y:scroll;border-right:1px solid #333;}
-.secret{background:#1a1a1a;padding:15px;margin-bottom:15px;border-radius:10px;}
-.meta{font-size:12px;color:#aaa;}
-.right{width:40%;padding:20px;}
-textarea,input{width:100%;background:#111;border:none;color:white;padding:10px;border-radius:5px;margin-top:10px;}
-.gender{display:flex;margin-top:10px;}
-.gender button{flex:1;padding:10px;background:black;color:white;border:1px solid #333;}
-button{cursor:pointer}
+body{margin:0;background:#0d0d0d;color:white;font-family:'Reddit Sans',sans-serif}
+header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron'}
 
-.reaction-btn{font-size:20px;margin:5px;cursor:pointer}
-.reacted{animation:pop .4s ease;filter:drop-shadow(0 0 6px #fff)}
+.container{display:flex;height:90vh}
+.left{width:60%;padding:20px;overflow-y:auto;border-right:1px solid #333}
+.right{width:40%;padding:20px}
+
+.secret{background:#1a1a1a;padding:15px;margin-bottom:15px;border-radius:10px}
+.meta{font-size:12px;color:#aaa;margin-bottom:5px}
+
+textarea,input{width:100%;background:#111;border:none;color:white;padding:10px;border-radius:5px;margin-top:10px}
+
+.gender{display:flex;margin-top:10px}
+.gender button{flex:1;padding:10px;background:#000;color:#fff;border:1px solid #333}
+
+button{cursor:pointer;border:none;border-radius:6px;padding:6px 10px;margin-top:5px}
+
+/* BOTONES */
+.actions button{background:#222;color:#ccc;margin-right:5px}
+.actions button:hover{background:#333}
+
+/* REACCIONES */
+.reaction-btn{font-size:22px;margin:5px;cursor:pointer}
+.reacted{font-size:22px;animation:pop .3s ease}
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}
 
-.footer{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
-background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px;
-font-size:10px;color:#bbb}
-.close-btn{position:absolute;top:4px;right:6px;cursor:pointer}
+/* TOP BAR */
+.topbar{margin-bottom:15px}
+.topbar button{background:#222;color:#aaa}
+.topbar button.active{background:#555;color:#fff}
+
+/* FOOTER LEGAL */
+.footer{
+position:fixed;
+bottom:10px;
+left:50%;
+transform:translateX(-50%);
+max-width:90%;
+background:#111;
+border:1px solid #2a2a2a;
+border-radius:8px;
+padding:10px 14px;
+font-size:10px;
+color:#bbb;
+line-height:1.3;
+box-shadow:0 0 10px rgba(0,0,0,0.6);
+z-index:999;
+}
+
+.close-btn{
+position:absolute;
+top:4px;
+right:6px;
+cursor:pointer;
+}
 </style>
 </head>
 
@@ -37,10 +72,19 @@ font-size:10px;color:#bbb}
 
 <div class="container">
 
-<div class="left" id="secrets"></div>
+<div class="left">
+
+<div class="topbar">
+<button id="recentBtn" class="active">Recientes</button>
+<button id="topBtn">Populares</button>
+</div>
+
+<div id="secrets"></div>
+</div>
 
 <div class="right">
 <h3>Confesá tu secreto</h3>
+
 <textarea id="text"></textarea>
 <input type="number" id="age" placeholder="Edad">
 
@@ -58,11 +102,11 @@ font-size:10px;color:#bbb}
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc } 
+import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const app = initializeApp({
- apiKey:"AIza...",
+ apiKey:"AIzaSy...",
  authDomain:"prettysecret-32c22.firebaseapp.com",
  projectId:"prettysecret-32c22"
 });
@@ -70,16 +114,10 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 let selectedGender="X";
+let mode="recent";
+
 window.setGender=(g)=>selectedGender=g;
 
-/* SEGURIDAD */
-const banned=["idiota","puta","odio"];
-function bad(t){return banned.some(w=>t.toLowerCase().includes(w))}
-function personal(t){
- return /\d{7,}|@\w+|\S+@\S+/.test(t)
-}
-
-/* TIEMPO */
 function timeAgo(t){
  const d=Math.floor((Date.now()-t)/1000);
  if(d<60)return"ahora";
@@ -88,15 +126,11 @@ function timeAgo(t){
  return Math.floor(d/86400)+"d";
 }
 
-/* POST */
 async function addSecret(){
  const t=document.getElementById("text");
  const a=document.getElementById("age");
 
- if(!t.value||!a.value)return alert("Completá");
-
- if(bad(t.value))return alert("Contenido bloqueado");
- if(personal(t.value))return alert("No datos personales");
+ if(!t.value||!a.value)return;
 
  await addDoc(collection(db,"secretos"),{
   text:t.value,
@@ -111,10 +145,9 @@ async function addSecret(){
  loadSecrets();
 }
 
-/* REACT */
 window.react=async(id,type,current)=>{
  let r=JSON.parse(localStorage.getItem("r")||"{}");
- if(r[id])return alert("Ya reaccionaste");
+ if(r[id])return;
 
  await updateDoc(doc(db,"secretos",id),{
   [`reactions.${type}`]:(current||0)+1
@@ -125,85 +158,51 @@ window.react=async(id,type,current)=>{
  loadSecrets();
 };
 
-/* SHARE */
 window.share=(text)=>{
  navigator.clipboard.writeText(text);
  alert("Copiado");
-}
-
-/* REPORT */
-window.report=(id)=>{
- alert("Reportado");
-}
-
-/* COMENTAR */
-window.addComment=async(secretId,parentId=null)=>{
- const input=document.getElementById(parentId?`reply-${parentId}`:`c-${secretId}`);
- if(!input.value)return;
-
- await addDoc(collection(db,"secretos",secretId,"comentarios"),{
-  text:input.value,
-  parentId,
-  created:Date.now()
- });
-
- input.value="";
- loadSecrets();
 };
 
-window.toggleReply=(id)=>{
- const el=document.getElementById("box-"+id);
- el.style.display=el.style.display==="none"?"block":"none";
+window.report=()=>{
+ alert("Reporte enviado");
 };
 
-/* LOAD */
 async function loadSecrets(){
  const cont=document.getElementById("secrets");
  cont.innerHTML="";
 
- const snap=await getDocs(query(collection(db,"secretos"),orderBy("created","desc")));
+ const snap=await getDocs(collection(db,"secretos"));
+ let data=[];
+ snap.forEach(d=>data.push({id:d.id,...d.data()}));
 
- for(const d of snap.docs){
-  const data=d.data();
-  const r=data.reactions||{};
-  const reacted=JSON.parse(localStorage.getItem("r")||"{}")[d.id];
+ if(mode==="recent"){
+  data.sort((a,b)=>b.created-a.created);
+ }else{
+  data.sort((a,b)=>
+   ((b.reactions?.neutral||0)+(b.reactions?.shy||0)+(b.reactions?.melt||0)) -
+   ((a.reactions?.neutral||0)+(a.reactions?.shy||0)+(a.reactions?.melt||0))
+  );
+ }
 
-  let reactionsHTML="";
+ for(const s of data){
 
-  if(reacted){
-   reactionsHTML=`<div class="reacted">${reacted}</div>`;
+  const r=s.reactions||{};
+  const user=JSON.parse(localStorage.getItem("r")||"{}")[s.id];
+
+  let reactionHTML="";
+
+  if(user){
+   const emojiMap={neutral:"😶",shy:"🤭",melt:"🫠"};
+   reactionHTML=`<div class="reacted">${emojiMap[user]}</div>`;
   }else{
-   reactionsHTML=`
+   reactionHTML=`
    😶 ${r.neutral||0}
    🤭 ${r.shy||0}
    🫠 ${r.melt||0}
    <div>
-   <span class="reaction-btn" onclick="react('${d.id}','neutral',${r.neutral||0})">😶</span>
-   <span class="reaction-btn" onclick="react('${d.id}','shy',${r.shy||0})">🤭</span>
-   <span class="reaction-btn" onclick="react('${d.id}','melt',${r.melt||0})">🫠</span>
-   </div>`;
-  }
-
-  const commentsSnap=await getDocs(collection(db,"secretos",d.id,"comentarios"));
-  let comments=[];
-  commentsSnap.forEach(c=>comments.push({id:c.id,...c.data()}));
-
-  let map={},roots=[];
-  comments.forEach(c=>{c.replies=[];map[c.id]=c});
-  comments.forEach(c=>c.parentId?map[c.parentId]?.replies.push(c):roots.push(c));
-
-  function render(c){
-   return `
-   <div style="margin-left:${c.parentId?15:0}px">
-   • ${c.text}
-   <button onclick="toggleReply('${c.id}')">Resp</button>
-
-   <div id="box-${c.id}" style="display:none">
-   <input id="reply-${c.id}">
-   <button onclick="addComment('${d.id}','${c.id}')">Enviar</button>
-   </div>
-
-   ${c.replies.map(render).join("")}
+   <span class="reaction-btn" onclick="react('${s.id}','neutral',${r.neutral||0})">😶</span>
+   <span class="reaction-btn" onclick="react('${s.id}','shy',${r.shy||0})">🤭</span>
+   <span class="reaction-btn" onclick="react('${s.id}','melt',${r.melt||0})">🫠</span>
    </div>`;
   }
 
@@ -211,34 +210,60 @@ async function loadSecrets(){
   div.className="secret";
 
   div.innerHTML=`
-  <div class="meta">${data.age}|${data.gender} • ${timeAgo(data.created)}</div>
-  <div>${data.text}</div>
+  <div class="meta">${s.age} | ${s.gender} • ${timeAgo(s.created)}</div>
+  <div>${s.text}</div>
 
-  ${reactionsHTML}
+  ${reactionHTML}
 
-  <button onclick="share('${data.text}')">Compartir</button>
-  <button onclick="report('${d.id}')">Reportar</button>
+  <div class="actions">
+    <button onclick="share('${s.text}')">Compartir</button>
+    <button onclick="report()">Reportar</button>
+  </div>
 
-  <input id="c-${d.id}" placeholder="Comentar">
-  <button onclick="addComment('${d.id}')">Enviar</button>
-
-  ${roots.map(render).join("")}
+  <input placeholder="Comentar...">
   `;
 
   cont.appendChild(div);
  }
 }
 
+document.getElementById("recentBtn").onclick=()=>{
+ mode="recent";
+ recentBtn.classList.add("active");
+ topBtn.classList.remove("active");
+ loadSecrets();
+};
+
+document.getElementById("topBtn").onclick=()=>{
+ mode="top";
+ topBtn.classList.add("active");
+ recentBtn.classList.remove("active");
+ loadSecrets();
+};
+
 document.getElementById("sendBtn").onclick=addSecret;
+
 loadSecrets();
 
 window.closeFooter=()=>document.getElementById("footer").style.display="none";
 
 </script>
 
+<!-- ⚖️ AVISO LEGAL COMPLETO -->
 <div class="footer" id="footer">
 <span class="close-btn" onclick="closeFooter()">✕</span>
-Plataforma libre. No compartas datos personales.
+
+Pretty Secret es una plataforma de libre expresión y entretenimiento. El contenido publicado por los usuarios es de su exclusiva responsabilidad y no refleja la opinión de los administradores.<br><br>
+
+Privacidad: No compartas datos personales propios o de terceros.<br><br>
+
+Moderación: Nos reservamos el derecho de eliminar cualquier contenido que promueva el acoso, el odio o actividades ilegales.<br><br>
+
+Seguridad: Si eres menor de edad, te recomendamos navegar bajo la supervisión de un adulto.<br><br>
+
+Al utilizar este sitio, aceptas nuestros términos de convivencia.<br><br>
+
+Para reportar contenido inapropiado, contacta a: <b>soporteprettysecret@outlook.com</b>
 </div>
 
 </body>
