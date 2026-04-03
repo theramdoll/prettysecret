@@ -8,129 +8,38 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Reddit+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body {
-    margin: 0;
-    background: #0d0d0d;
-    color: white;
-    font-family: 'Reddit Sans', sans-serif;
-}
+body{margin:0;background:#0d0d0d;color:#fff;font-family:'Reddit Sans',sans-serif}
+header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron'}
+.container{display:flex;height:90vh}
+.left{width:60%;padding:20px;overflow-y:scroll;border-right:1px solid #333}
+.secret{background:#1a1a1a;padding:15px;margin-bottom:15px;border-radius:10px}
+.meta{font-size:12px;color:#aaa}
+.right{width:40%;padding:20px}
 
-header {
-    text-align: center;
-    padding: 20px;
-    font-size: 40px;
-    font-family: 'Orbitron', sans-serif;
-}
+textarea,input{width:100%;background:#111;border:none;color:#fff;padding:10px;border-radius:5px;margin-top:10px}
+.gender{display:flex;margin-top:10px}
+.gender button{flex:1;padding:10px;background:#000;color:#fff;border:1px solid #333;cursor:pointer}
+button.submit{margin-top:15px;width:100%;padding:12px;background:#444;border:none;color:#fff;cursor:pointer}
 
-.container {
-    display: flex;
-    height: 90vh;
-}
+.reaction-btn{font-size:18px;margin:5px;cursor:pointer;transition:.2s}
+.reaction-btn:hover{transform:scale(1.2)}
+.reacted{animation:pop .4s;filter:drop-shadow(0 0 6px #fff)}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.6)}100%{transform:scale(1)}}
 
-.left {
-    width: 60%;
-    padding: 20px;
-    overflow-y: scroll;
-    border-right: 1px solid #333;
-}
+.neutral{color:#aaa}
+.shy{color:#ffb6c1}
+.melt{color:#00e5ff}
 
-.secret {
-    background: #1a1a1a;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-}
+.share-btn{font-size:11px;color:#6bc1ff;cursor:pointer;margin-right:10px}
+.report-btn{font-size:11px;color:#ff6b6b;cursor:pointer}
 
-.meta {
-    font-size: 12px;
-    color: #aaa;
-}
+.pagination{display:flex;justify-content:space-between;padding:10px}
 
-.right {
-    width: 40%;
-    padding: 20px;
-}
+.tabs{display:flex;gap:10px;margin-bottom:10px}
+.tabs button{flex:1;padding:8px;background:#222;border:none;color:#fff;cursor:pointer}
 
-textarea, input {
-    width: 100%;
-    background: #111;
-    border: none;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-    font-family: 'Reddit Sans', sans-serif;
-}
-
-.gender {
-    display: flex;
-    margin-top: 10px;
-}
-
-.gender button {
-    flex: 1;
-    padding: 10px;
-    background: black;
-    color: white;
-    border: 1px solid #333;
-    cursor: pointer;
-}
-
-button.submit {
-    margin-top: 15px;
-    width: 100%;
-    padding: 12px;
-    background: #444;
-    border: none;
-    color: white;
-    cursor: pointer;
-}
-
-/* REACTIONS */
-.reaction-btn {
-    font-size: 18px;
-    margin: 5px;
-    cursor: pointer;
-    transition: transform 0.2s, filter 0.2s;
-}
-
-.reaction-btn:hover {
-    transform: scale(1.2);
-}
-
-.reacted {
-    animation: pop 0.4s ease;
-    filter: drop-shadow(0 0 6px #fff);
-}
-
-@keyframes pop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.6); }
-    100% { transform: scale(1); }
-}
-
-/* FOOTER */
-.footer {
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: 90%;
-    padding: 10px 14px;
-    font-size: 10px;
-    color: #bbb;
-    background: #111;
-    border: 1px solid #2a2a2a;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.footer .close-btn {
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    cursor: pointer;
-}
+.footer{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);max-width:90%;padding:10px;font-size:10px;color:#bbb;background:#111;border:1px solid #2a2a2a;border-radius:8px;text-align:center}
+.footer .close-btn{position:absolute;top:4px;right:6px;cursor:pointer}
 </style>
 </head>
 
@@ -140,20 +49,29 @@ button.submit {
 
 <div class="container">
 
-<div class="left" id="secrets"></div>
+<div class="left">
+    <div class="tabs">
+        <button onclick="setMode('recent')">🕒 Recientes</button>
+        <button onclick="setMode('top')">🔥 Populares</button>
+    </div>
+
+    <div id="secrets"></div>
+
+    <div class="pagination">
+        <button onclick="prevPage()">Anterior</button>
+        <button onclick="nextPage()">Siguiente</button>
+    </div>
+</div>
 
 <div class="right">
     <h3>Confesá tu secreto</h3>
-
     <textarea id="text"></textarea>
     <input type="number" id="age" placeholder="Edad">
-
     <div class="gender">
         <button onclick="setGender('M')">M</button>
         <button onclick="setGender('F')">F</button>
         <button onclick="setGender('X')">X</button>
     </div>
-
     <button class="submit" id="sendBtn">Enviar</button>
 </div>
 
@@ -165,194 +83,158 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",
-  authDomain: "prettysecret-32c22.firebaseapp.com",
-  projectId: "prettysecret-32c22"
-};
+const app = initializeApp({
+ apiKey:"AIzaSyB...",
+ authDomain:"prettysecret-32c22.firebaseapp.com",
+ projectId:"prettysecret-32c22"
+});
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let selectedGender = "X";
-window.setGender = (g) => selectedGender = g;
+let selectedGender="X";
+let currentPage=1;
+let mode="recent";
+const perPage=5;
+
+window.setGender=g=>selectedGender=g;
+window.setMode=m=>{mode=m;currentPage=1;loadSecrets();};
 
 function timeAgo(t){
-    const d = Math.floor((Date.now()-t)/1000);
-    if(d<60) return "hace unos segundos";
-    if(d<3600) return `hace ${Math.floor(d/60)} min`;
-    if(d<86400) return `hace ${Math.floor(d/3600)} h`;
-    return `hace ${Math.floor(d/86400)} días`;
+ const d=Math.floor((Date.now()-t)/1000);
+ if(d<60)return"hace segundos";
+ if(d<3600)return`hace ${Math.floor(d/60)} min`;
+ if(d<86400)return`hace ${Math.floor(d/3600)} h`;
+ return`hace ${Math.floor(d/86400)} días`;
 }
 
 /* GUARDAR */
 async function addSecret(){
-    const textInput = document.getElementById("text");
-    const ageInput = document.getElementById("age");
+ const t=document.getElementById("text");
+ const a=document.getElementById("age");
+ if(!t.value||!a.value)return alert("Completá todo");
 
-    const text = textInput.value;
-    const age = ageInput.value;
+ await addDoc(collection(db,"secretos"),{
+  text:t.value,age:a.value,gender:selectedGender,
+  created:Date.now(),
+  reactions:{neutral:0,shy:0,melt:0}
+ });
 
-    if(!text || !age) return alert("Completá todo");
-
-    await addDoc(collection(db,"secretos"),{
-        text,
-        age,
-        gender:selectedGender,
-        created: Date.now(),
-        reactions:{neutral:0,shy:0,melt:0}
-    });
-
-    textInput.value = "";
-    ageInput.value = "";
-
-    loadSecrets();
+ t.value="";a.value="";
+ loadSecrets();
 }
 
-/* REACCIONES */
-window.react = async (id,type,current)=>{
-    let r = JSON.parse(localStorage.getItem("r")||"{}");
-
-    if(r[id]) return alert("Ya reaccionaste");
-
-    await updateDoc(doc(db,"secretos",id),{
-        [`reactions.${type}`]: (current||0)+1
-    });
-
-    r[id] = type;
-    localStorage.setItem("r",JSON.stringify(r));
-
-    loadSecrets();
+/* SHARE */
+window.shareSecret=text=>{
+ if(navigator.share){
+  navigator.share({title:"Pretty Secret",text,url:location.href});
+ }else{
+  navigator.clipboard.writeText(text+" "+location.href);
+  alert("Copiado");
+ }
 };
 
-/* COMENTARIOS */
-window.addComment = async (secretId, parentId=null)=>{
-    const input = document.getElementById(parentId ? `reply-input-${parentId}` : `c-${secretId}`);
-    const text = input.value;
-
-    if(!text) return;
-
-    await addDoc(collection(db,"secretos",secretId,"comentarios"),{
-        text,
-        created: Date.now(),
-        parentId
-    });
-
-    loadSecrets();
+/* REPORT */
+window.reportSecret=async(id)=>{
+ await addDoc(collection(db,"reportes"),{secretId:id,created:Date.now()});
+ alert("Reportado");
+ loadSecrets();
 };
 
-window.showReply = (id)=>{
-    const el = document.getElementById(`reply-box-${id}`);
-    el.style.display = el.style.display === "none" ? "block" : "none";
+/* REACT */
+window.react=async(id,type,current)=>{
+ let r=JSON.parse(localStorage.getItem("r")||"{}");
+ if(r[id])return alert("Ya reaccionaste");
+
+ await updateDoc(doc(db,"secretos",id),{
+  [`reactions.${type}`]:(current||0)+1
+ });
+
+ r[id]=type;
+ localStorage.setItem("r",JSON.stringify(r));
+ loadSecrets();
 };
 
-/* CARGAR */
+/* LOAD */
 async function loadSecrets(){
-    const cont = document.getElementById("secrets");
-    cont.innerHTML="";
+ const cont=document.getElementById("secrets");
+ cont.innerHTML="";
 
-    const q = query(collection(db,"secretos"),orderBy("created","desc"));
-    const snap = await getDocs(q);
+ const secretsSnap=await getDocs(collection(db,"secretos"));
+ const reportsSnap=await getDocs(collection(db,"reportes"));
 
-    for(const d of snap.docs){
-        const data = d.data();
-        const reactions = data.reactions || {neutral:0,shy:0,melt:0};
+ let reportCount={};
+ reportsSnap.forEach(r=>{
+  const id=r.data().secretId;
+  reportCount[id]=(reportCount[id]||0)+1;
+ });
 
-        const reacted = JSON.parse(localStorage.getItem("r")||"{}");
-        const userReaction = reacted[d.id];
+ let secrets=[];
+ secretsSnap.forEach(d=>{
+  const data=d.data();
+  const reactions=data.reactions||{};
+  const total=(reactions.neutral||0)+(reactions.shy||0)+(reactions.melt||0);
 
-        let reactionsHTML = "";
+  // 🚫 OCULTAR SI TIENE MUCHOS REPORTES
+  if((reportCount[d.id]||0)>=3) return;
 
-        const emojiMap = {
-            neutral:"😶",
-            shy:"🤭",
-            melt:"🫠"
-        };
+  secrets.push({id:d.id,...data,total});
+ });
 
-        if(userReaction){
-            reactionsHTML = `
-                <div class="reacted">
-                    ${emojiMap[userReaction]} ${reactions[userReaction] || 1}
-                </div>
-            `;
-        } else {
-            reactionsHTML = `
-                <div>
-                    😶 ${reactions.neutral||0}
-                    🤭 ${reactions.shy||0}
-                    🫠 ${reactions.melt||0}
+ // 🔥 ORDEN
+ if(mode==="top"){
+  secrets.sort((a,b)=>b.total-a.total);
+ } else {
+  secrets.sort((a,b)=>b.created-a.created);
+ }
 
-                    <button class="reaction-btn" onclick="react('${d.id}','neutral',${reactions.neutral||0})">😶</button>
-                    <button class="reaction-btn" onclick="react('${d.id}','shy',${reactions.shy||0})">🤭</button>
-                    <button class="reaction-btn" onclick="react('${d.id}','melt',${reactions.melt||0})">🫠</button>
-                </div>
-            `;
-        }
+ const page=secrets.slice((currentPage-1)*perPage,currentPage*perPage);
 
-        const commentsSnap = await getDocs(collection(db,"secretos",d.id,"comentarios"));
-        let comments = [];
-        commentsSnap.forEach(c=>comments.push({id:c.id,...c.data()}));
+ for(const data of page){
+  const r=data.reactions||{};
+  const user=JSON.parse(localStorage.getItem("r")||"{}")[data.id];
 
-        let map = {};
-        let roots = [];
+  let reactHTML=user
+   ? `<div class="reacted">${["😶","🤭","🫠"][["neutral","shy","melt"].indexOf(user)]} ${r[user]||1}</div>`
+   : `<div>
+      <span class="neutral">😶 ${r.neutral||0}</span>
+      <span class="shy">🤭 ${r.shy||0}</span>
+      <span class="melt">🫠 ${r.melt||0}</span><br>
+      <button class="reaction-btn" onclick="react('${data.id}','neutral',${r.neutral||0})">😶</button>
+      <button class="reaction-btn" onclick="react('${data.id}','shy',${r.shy||0})">🤭</button>
+      <button class="reaction-btn" onclick="react('${data.id}','melt',${r.melt||0})">🫠</button>
+     </div>`;
 
-        comments.forEach(c=>{
-            c.replies=[];
-            map[c.id]=c;
-        });
+  const div=document.createElement("div");
+  div.className="secret";
+  div.innerHTML=`
+   <div class="meta">${data.age} | ${data.gender} • ${timeAgo(data.created)}</div>
+   <div>${data.text}</div>
 
-        comments.forEach(c=>{
-            if(c.parentId){
-                map[c.parentId]?.replies.push(c);
-            } else roots.push(c);
-        });
+   <div style="margin-top:5px">
+     <span class="share-btn" onclick="shareSecret('${data.text}')">Compartir</span>
+     <span class="report-btn" onclick="reportSecret('${data.id}')">Reportar</span>
+   </div>
 
-        function render(c){
-            return `
-            <div style="margin-top:8px; padding-left:${c.parentId?15:0}px;">
-                <div style="font-size:12px;">• ${c.text}</div>
-                <button onclick="showReply('${c.id}')">Responder</button>
-
-                <div id="reply-box-${c.id}" style="display:none;">
-                    <input id="reply-input-${c.id}" placeholder="Responder...">
-                    <button onclick="addComment('${d.id}','${c.id}')">Enviar</button>
-                </div>
-
-                ${c.replies.map(render).join("")}
-            </div>`;
-        }
-
-        const div = document.createElement("div");
-        div.className="secret";
-
-        div.innerHTML=`
-        <div class="meta">${data.age} | ${data.gender} • ${timeAgo(data.created)}</div>
-        <div>${data.text}</div>
-
-        ${reactionsHTML}
-
-        <input id="c-${d.id}" placeholder="Comentario...">
-        <button onclick="addComment('${d.id}')">Enviar</button>
-
-        ${roots.map(render).join("")}
-        `;
-
-        cont.appendChild(div);
-    }
+   ${reactHTML}
+  `;
+  cont.appendChild(div);
+ }
 }
 
-document.getElementById("sendBtn").onclick = addSecret;
+window.nextPage=()=>{currentPage++;loadSecrets();}
+window.prevPage=()=>{if(currentPage>1){currentPage--;loadSecrets();}}
+
+document.getElementById("sendBtn").onclick=addSecret;
 loadSecrets();
 
-window.closeFooter = ()=>document.getElementById("footer").style.display="none";
-
+window.closeFooter=()=>document.getElementById("footer").style.display="none";
 </script>
 
 <div class="footer" id="footer">
 <span class="close-btn" onclick="closeFooter()">✕</span>
-Pretty Secret es una plataforma de libre expresión. El contenido es responsabilidad de los usuarios.<br>
+Pretty Secret es una plataforma de libre expresión.<br>
 No compartas datos personales.<br>
-Para reportes: soporteprettysecret@outlook.com
+Reportes: soporteprettysecret@outlook.com
 </div>
 
 </body>
