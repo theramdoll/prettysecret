@@ -86,6 +86,29 @@ button.submit {
     cursor: pointer;
 }
 
+/* REACTIONS */
+.reaction-btn {
+    font-size: 18px;
+    margin: 5px;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+}
+
+.reaction-btn:hover {
+    transform: scale(1.2);
+}
+
+.reacted {
+    animation: pop 0.4s ease;
+    filter: drop-shadow(0 0 6px #fff);
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.6); }
+    100% { transform: scale(1); }
+}
+
 /* FOOTER */
 .footer {
     position: fixed;
@@ -164,8 +187,12 @@ function timeAgo(t){
 
 /* GUARDAR */
 async function addSecret(){
-    const text = document.getElementById("text").value;
-    const age = document.getElementById("age").value;
+    const textInput = document.getElementById("text");
+    const ageInput = document.getElementById("age");
+
+    const text = textInput.value;
+    const age = ageInput.value;
+
     if(!text || !age) return alert("Completá todo");
 
     await addDoc(collection(db,"secretos"),{
@@ -176,30 +203,33 @@ async function addSecret(){
         reactions:{neutral:0,shy:0,melt:0}
     });
 
+    textInput.value = "";
+    ageInput.value = "";
+
     loadSecrets();
 }
 
 /* REACCIONES */
 window.react = async (id,type,current)=>{
     let r = JSON.parse(localStorage.getItem("r")||"{}");
+
     if(r[id]) return alert("Ya reaccionaste");
 
     await updateDoc(doc(db,"secretos",id),{
         [`reactions.${type}`]: (current||0)+1
     });
 
-    r[id]=true;
+    r[id] = type;
     localStorage.setItem("r",JSON.stringify(r));
+
     loadSecrets();
 };
 
 /* COMENTARIOS */
 window.addComment = async (secretId, parentId=null)=>{
-    const input = document.getElementById(
-        parentId ? `reply-input-${parentId}` : `c-${secretId}`
-    );
-
+    const input = document.getElementById(parentId ? `reply-input-${parentId}` : `c-${secretId}`);
     const text = input.value;
+
     if(!text) return;
 
     await addDoc(collection(db,"secretos",secretId,"comentarios"),{
@@ -226,9 +256,40 @@ async function loadSecrets(){
 
     for(const d of snap.docs){
         const data = d.data();
+        const reactions = data.reactions || {neutral:0,shy:0,melt:0};
+
+        const reacted = JSON.parse(localStorage.getItem("r")||"{}");
+        const userReaction = reacted[d.id];
+
+        let reactionsHTML = "";
+
+        const emojiMap = {
+            neutral:"😶",
+            shy:"🤭",
+            melt:"🫠"
+        };
+
+        if(userReaction){
+            reactionsHTML = `
+                <div class="reacted">
+                    ${emojiMap[userReaction]} ${reactions[userReaction] || 1}
+                </div>
+            `;
+        } else {
+            reactionsHTML = `
+                <div>
+                    😶 ${reactions.neutral||0}
+                    🤭 ${reactions.shy||0}
+                    🫠 ${reactions.melt||0}
+
+                    <button class="reaction-btn" onclick="react('${d.id}','neutral',${reactions.neutral||0})">😶</button>
+                    <button class="reaction-btn" onclick="react('${d.id}','shy',${reactions.shy||0})">🤭</button>
+                    <button class="reaction-btn" onclick="react('${d.id}','melt',${reactions.melt||0})">🫠</button>
+                </div>
+            `;
+        }
 
         const commentsSnap = await getDocs(collection(db,"secretos",d.id,"comentarios"));
-
         let comments = [];
         commentsSnap.forEach(c=>comments.push({id:c.id,...c.data()}));
 
@@ -248,9 +309,8 @@ async function loadSecrets(){
 
         function render(c){
             return `
-            <div style="margin-top:8px; padding-left:${c.parentId?15:0}px; border-left:${c.parentId? "1px solid #333":"none"};">
+            <div style="margin-top:8px; padding-left:${c.parentId?15:0}px;">
                 <div style="font-size:12px;">• ${c.text}</div>
-
                 <button onclick="showReply('${c.id}')">Responder</button>
 
                 <div id="reply-box-${c.id}" style="display:none;">
@@ -269,15 +329,7 @@ async function loadSecrets(){
         <div class="meta">${data.age} | ${data.gender} • ${timeAgo(data.created)}</div>
         <div>${data.text}</div>
 
-        <div>
-            😶 ${data.reactions.neutral||0}
-            🤭 ${data.reactions.shy||0}
-            🫠 ${data.reactions.melt||0}
-
-            <button onclick="react('${d.id}','neutral',${data.reactions.neutral||0})">😶</button>
-            <button onclick="react('${d.id}','shy',${data.reactions.shy||0})">🤭</button>
-            <button onclick="react('${d.id}','melt',${data.reactions.melt||0})">🫠</button>
-        </div>
+        ${reactionsHTML}
 
         <input id="c-${d.id}" placeholder="Comentario...">
         <button onclick="addComment('${d.id}')">Enviar</button>
@@ -290,7 +342,6 @@ async function loadSecrets(){
 }
 
 document.getElementById("sendBtn").onclick = addSecret;
-
 loadSecrets();
 
 window.closeFooter = ()=>document.getElementById("footer").style.display="none";
@@ -299,7 +350,6 @@ window.closeFooter = ()=>document.getElementById("footer").style.display="none";
 
 <div class="footer" id="footer">
 <span class="close-btn" onclick="closeFooter()">✕</span>
-
 Pretty Secret es una plataforma de libre expresión. El contenido es responsabilidad de los usuarios.<br>
 No compartas datos personales.<br>
 Para reportes: soporteprettysecret@outlook.com
