@@ -84,15 +84,21 @@ header{
 .share{ background:#1da1f2; color:white; }
 .report{ background:#ff4d4d; color:white; }
 
-/* REACTIONS */
-.reactions span{
-    margin-right:8px;
+/* VOTES */
+.vote-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
 }
 
-.react-btn{
+.vote-btn{
     cursor:pointer;
     font-size:18px;
-    margin-right:5px;
+}
+
+.vote-btn.active{
+    color:#ff4500;
 }
 
 /* RIGHT */
@@ -207,7 +213,7 @@ text:t.value,
 age:a.value,
 gender:selectedGender,
 created:Date.now(),
-reactions:{neutral:0,shy:0,melt:0}
+votes:{up:0,down:0}
 });
 
 t.value="";
@@ -228,17 +234,26 @@ await updateDoc(doc(db,"secretos",id),{reported:true});
 alert("Reportado");
 };
 
-/* REACT */
-window.react=async(id,type,current)=>{
-let r=JSON.parse(localStorage.getItem("r")||"{}");
-if(r[id])return;
+/* VOTE */
+window.vote=async(id,type,current)=>{
+let v=JSON.parse(localStorage.getItem("v")||"{}");
+let prev=v[id];
 
-await updateDoc(doc(db,"secretos",id),{
-[`reactions.${type}`]:(current||0)+1
-});
+if(prev===type)return;
 
-r[id]=type;
-localStorage.setItem("r",JSON.stringify(r));
+let update={};
+
+if(prev){
+update[`votes.${prev}`]=(current[prev]||0)-1;
+}
+
+update[`votes.${type}`]=(current[type]||0)+1;
+
+await updateDoc(doc(db,"secretos",id),update);
+
+v[id]=type;
+localStorage.setItem("v",JSON.stringify(v));
+
 loadSecrets();
 };
 
@@ -253,8 +268,9 @@ const snap=await getDocs(q);
 let list=[];
 snap.forEach(d=>{
 let data=d.data();
-let score=(data.reactions?.neutral||0)+(data.reactions?.shy||0)+(data.reactions?.melt||0);
-list.push({id:d.id,...data,score});
+let votes=data.votes||{up:0,down:0};
+let score=(votes.up||0)-(votes.down||0);
+list.push({id:d.id,...data,votes,score});
 });
 
 if(mode==="popular"){
@@ -262,19 +278,15 @@ list.sort((a,b)=>b.score-a.score);
 }
 
 list.forEach(s=>{
-let reacted=JSON.parse(localStorage.getItem("r")||"{}")[s.id];
+let userVote=JSON.parse(localStorage.getItem("v")||"{}")[s.id];
 
-let reactionsHTML = reacted
-? `<div>${reacted==="neutral"?"😶":reacted==="shy"?"🤭":"🫠"} ${s.reactions[reacted]}</div>`
-: `<div class="reactions">
-😶 ${s.reactions.neutral}
-🤭 ${s.reactions.shy}
-🫠 ${s.reactions.melt}
-<br>
-<span class="react-btn" onclick="react('${s.id}','neutral',${s.reactions.neutral})">😶</span>
-<span class="react-btn" onclick="react('${s.id}','shy',${s.reactions.shy})">🤭</span>
-<span class="react-btn" onclick="react('${s.id}','melt',${s.reactions.melt})">🫠</span>
-</div>`;
+const voteHTML=`
+<div class="vote-box">
+<span class="vote-btn ${userVote==='up'?'active':''}" onclick="vote('${s.id}','up',${JSON.stringify(s.votes)})">⬆️</span>
+<span>${s.score}</span>
+<span class="vote-btn ${userVote==='down'?'active':''}" onclick="vote('${s.id}','down',${JSON.stringify(s.votes)})">⬇️</span>
+</div>
+`;
 
 const div=document.createElement("div");
 div.className="secret";
@@ -283,7 +295,7 @@ div.innerHTML=`
 <div class="meta">${s.age}${s.gender} • ${Math.floor((Date.now()-s.created)/60000)}m</div>
 <div>${s.text}</div>
 
-${reactionsHTML}
+${voteHTML}
 
 <div class="actions">
 <button class="btn share" onclick="share('${s.text}')">Compartir</button>
