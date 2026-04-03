@@ -8,60 +8,142 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Reddit+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;background:#0d0d0d;color:white;font-family:'Reddit Sans',sans-serif}
-header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron'}
+body{
+    margin:0;
+    background:#0d0d0d;
+    color:white;
+    font-family:'Reddit Sans',sans-serif;
+}
 
-.container{display:flex;height:90vh}
-.left{width:60%;padding:20px;overflow-y:auto;border-right:1px solid #333}
-.right{width:40%;padding:20px}
+header{
+    text-align:center;
+    padding:20px;
+    font-size:40px;
+    font-family:'Orbitron';
+}
 
-.secret{background:#1a1a1a;padding:15px;margin-bottom:15px;border-radius:10px}
-.meta{font-size:12px;color:#aaa;margin-bottom:5px}
+/* TABS */
+.tabs{
+    display:flex;
+    gap:10px;
+    padding:0 20px 10px;
+}
 
-textarea,input{width:100%;background:#111;border:none;color:white;padding:10px;border-radius:5px;margin-top:10px}
+.tab{
+    background:#1a1a1a;
+    padding:8px 14px;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:14px;
+    border:1px solid #333;
+}
 
-.gender{display:flex;margin-top:10px}
-.gender button{flex:1;padding:10px;background:#000;color:#fff;border:1px solid #333}
+.tab.active{
+    background:#2a2a2a;
+}
 
-button{cursor:pointer;border:none;border-radius:6px;padding:6px 10px;margin-top:5px}
+.container{
+    display:flex;
+    height:85vh;
+}
+
+.left{
+    width:60%;
+    padding:20px;
+    overflow-y:auto;
+    border-right:1px solid #333;
+}
+
+.secret{
+    background:#1a1a1a;
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:10px;
+}
+
+.meta{
+    font-size:12px;
+    color:#aaa;
+}
 
 /* BOTONES */
-.actions button{background:#222;color:#ccc;margin-right:5px}
-.actions button:hover{background:#333}
+.actions{
+    margin-top:10px;
+    display:flex;
+    gap:10px;
+}
 
-/* REACCIONES */
-.reaction-btn{font-size:22px;margin:5px;cursor:pointer}
-.reacted{font-size:22px;animation:pop .3s ease}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}
+.btn{
+    padding:5px 10px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:12px;
+}
 
-/* TOP BAR */
-.topbar{margin-bottom:15px}
-.topbar button{background:#222;color:#aaa}
-.topbar button.active{background:#555;color:#fff}
+.share{ background:#1da1f2; color:white; }
+.report{ background:#ff4d4d; color:white; }
 
-/* FOOTER LEGAL */
+/* REACTIONS */
+.reactions span{
+    margin-right:8px;
+}
+
+.react-btn{
+    cursor:pointer;
+    font-size:18px;
+    margin-right:5px;
+}
+
+/* RIGHT */
+.right{
+    width:40%;
+    padding:20px;
+}
+
+textarea,input{
+    width:100%;
+    background:#111;
+    border:none;
+    color:white;
+    padding:10px;
+    border-radius:5px;
+    margin-top:10px;
+}
+
+.gender{
+    display:flex;
+    margin-top:10px;
+}
+
+.gender button{
+    flex:1;
+    padding:10px;
+    background:black;
+    color:white;
+    border:1px solid #333;
+    cursor:pointer;
+}
+
+/* FOOTER */
 .footer{
-position:fixed;
-bottom:10px;
-left:50%;
-transform:translateX(-50%);
-max-width:90%;
-background:#111;
-border:1px solid #2a2a2a;
-border-radius:8px;
-padding:10px 14px;
-font-size:10px;
-color:#bbb;
-line-height:1.3;
-box-shadow:0 0 10px rgba(0,0,0,0.6);
-z-index:999;
+    position:fixed;
+    bottom:10px;
+    left:50%;
+    transform:translateX(-50%);
+    max-width:90%;
+    padding:10px;
+    font-size:10px;
+    background:#111;
+    border:1px solid #333;
+    border-radius:8px;
 }
 
 .close-btn{
-position:absolute;
-top:4px;
-right:6px;
-cursor:pointer;
+    position:absolute;
+    right:5px;
+    top:3px;
+    cursor:pointer;
 }
 </style>
 </head>
@@ -70,21 +152,16 @@ cursor:pointer;
 
 <header>PRETTY SECRET</header>
 
+<div class="tabs">
+    <div class="tab active" onclick="setMode('recent')">🕒 Recientes</div>
+    <div class="tab" onclick="setMode('popular')">🔥 Populares</div>
+</div>
+
 <div class="container">
-
-<div class="left">
-
-<div class="topbar">
-<button id="recentBtn" class="active">Recientes</button>
-<button id="topBtn">Populares</button>
-</div>
-
-<div id="secrets"></div>
-</div>
+<div class="left" id="secrets"></div>
 
 <div class="right">
 <h3>Confesá tu secreto</h3>
-
 <textarea id="text"></textarea>
 <input type="number" id="age" placeholder="Edad">
 
@@ -94,21 +171,20 @@ cursor:pointer;
 <button onclick="setGender('X')">X</button>
 </div>
 
-<button id="sendBtn">Enviar</button>
+<button onclick="addSecret()">Enviar</button>
 </div>
-
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } 
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const app = initializeApp({
- apiKey:"AIzaSy...",
- authDomain:"prettysecret-32c22.firebaseapp.com",
- projectId:"prettysecret-32c22"
+  apiKey:"AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",
+  authDomain:"prettysecret-32c22.firebaseapp.com",
+  projectId:"prettysecret-32c22"
 });
 
 const db = getFirestore(app);
@@ -117,131 +193,109 @@ let selectedGender="X";
 let mode="recent";
 
 window.setGender=(g)=>selectedGender=g;
+window.setMode=(m)=>{mode=m;loadSecrets();};
 
-function timeAgo(t){
- const d=Math.floor((Date.now()-t)/1000);
- if(d<60)return"ahora";
- if(d<3600)return Math.floor(d/60)+"m";
- if(d<86400)return Math.floor(d/3600)+"h";
- return Math.floor(d/86400)+"d";
-}
+/* GUARDAR */
+window.addSecret=async()=>{
+const t=document.getElementById("text");
+const a=document.getElementById("age");
 
-async function addSecret(){
- const t=document.getElementById("text");
- const a=document.getElementById("age");
+if(!t.value||!a.value)return alert("Completá todo");
 
- if(!t.value||!a.value)return;
+await addDoc(collection(db,"secretos"),{
+text:t.value,
+age:a.value,
+gender:selectedGender,
+created:Date.now(),
+reactions:{neutral:0,shy:0,melt:0}
+});
 
- await addDoc(collection(db,"secretos"),{
-  text:t.value,
-  age:a.value,
-  gender:selectedGender,
-  created:Date.now(),
-  reactions:{neutral:0,shy:0,melt:0}
- });
+t.value="";
+a.value="";
 
- t.value="";
- a.value="";
- loadSecrets();
-}
-
-window.react=async(id,type,current)=>{
- let r=JSON.parse(localStorage.getItem("r")||"{}");
- if(r[id])return;
-
- await updateDoc(doc(db,"secretos",id),{
-  [`reactions.${type}`]:(current||0)+1
- });
-
- r[id]=type;
- localStorage.setItem("r",JSON.stringify(r));
- loadSecrets();
+loadSecrets();
 };
 
+/* SHARE */
 window.share=(text)=>{
- navigator.clipboard.writeText(text);
- alert("Copiado");
+navigator.clipboard.writeText(text);
+alert("Copiado");
 };
 
-window.report=()=>{
- alert("Reporte enviado");
+/* REPORT */
+window.report=async(id)=>{
+await updateDoc(doc(db,"secretos",id),{reported:true});
+alert("Reportado");
 };
 
+/* REACT */
+window.react=async(id,type,current)=>{
+let r=JSON.parse(localStorage.getItem("r")||"{}");
+if(r[id])return;
+
+await updateDoc(doc(db,"secretos",id),{
+[`reactions.${type}`]:(current||0)+1
+});
+
+r[id]=type;
+localStorage.setItem("r",JSON.stringify(r));
+loadSecrets();
+};
+
+/* LOAD */
 async function loadSecrets(){
- const cont=document.getElementById("secrets");
- cont.innerHTML="";
+const cont=document.getElementById("secrets");
+cont.innerHTML="";
 
- const snap=await getDocs(collection(db,"secretos"));
- let data=[];
- snap.forEach(d=>data.push({id:d.id,...d.data()}));
+let q=query(collection(db,"secretos"),orderBy("created","desc"));
+const snap=await getDocs(q);
 
- if(mode==="recent"){
-  data.sort((a,b)=>b.created-a.created);
- }else{
-  data.sort((a,b)=>
-   ((b.reactions?.neutral||0)+(b.reactions?.shy||0)+(b.reactions?.melt||0)) -
-   ((a.reactions?.neutral||0)+(a.reactions?.shy||0)+(a.reactions?.melt||0))
-  );
- }
+let list=[];
+snap.forEach(d=>{
+let data=d.data();
+let score=(data.reactions?.neutral||0)+(data.reactions?.shy||0)+(data.reactions?.melt||0);
+list.push({id:d.id,...data,score});
+});
 
- for(const s of data){
-
-  const r=s.reactions||{};
-  const user=JSON.parse(localStorage.getItem("r")||"{}")[s.id];
-
-  let reactionHTML="";
-
-  if(user){
-   const emojiMap={neutral:"😶",shy:"🤭",melt:"🫠"};
-   reactionHTML=`<div class="reacted">${emojiMap[user]}</div>`;
-  }else{
-   reactionHTML=`
-   😶 ${r.neutral||0}
-   🤭 ${r.shy||0}
-   🫠 ${r.melt||0}
-   <div>
-   <span class="reaction-btn" onclick="react('${s.id}','neutral',${r.neutral||0})">😶</span>
-   <span class="reaction-btn" onclick="react('${s.id}','shy',${r.shy||0})">🤭</span>
-   <span class="reaction-btn" onclick="react('${s.id}','melt',${r.melt||0})">🫠</span>
-   </div>`;
-  }
-
-  const div=document.createElement("div");
-  div.className="secret";
-
-  div.innerHTML=`
-  <div class="meta">${s.age} | ${s.gender} • ${timeAgo(s.created)}</div>
-  <div>${s.text}</div>
-
-  ${reactionHTML}
-
-  <div class="actions">
-    <button onclick="share('${s.text}')">Compartir</button>
-    <button onclick="report()">Reportar</button>
-  </div>
-
-  <input placeholder="Comentar...">
-  `;
-
-  cont.appendChild(div);
- }
+if(mode==="popular"){
+list.sort((a,b)=>b.score-a.score);
 }
 
-document.getElementById("recentBtn").onclick=()=>{
- mode="recent";
- recentBtn.classList.add("active");
- topBtn.classList.remove("active");
- loadSecrets();
-};
+list.forEach(s=>{
+let reacted=JSON.parse(localStorage.getItem("r")||"{}")[s.id];
 
-document.getElementById("topBtn").onclick=()=>{
- mode="top";
- topBtn.classList.add("active");
- recentBtn.classList.remove("active");
- loadSecrets();
-};
+let reactionsHTML = reacted
+? `<div>${reacted==="neutral"?"😶":reacted==="shy"?"🤭":"🫠"} ${s.reactions[reacted]}</div>`
+: `<div class="reactions">
+😶 ${s.reactions.neutral}
+🤭 ${s.reactions.shy}
+🫠 ${s.reactions.melt}
+<br>
+<span class="react-btn" onclick="react('${s.id}','neutral',${s.reactions.neutral})">😶</span>
+<span class="react-btn" onclick="react('${s.id}','shy',${s.reactions.shy})">🤭</span>
+<span class="react-btn" onclick="react('${s.id}','melt',${s.reactions.melt})">🫠</span>
+</div>`;
 
-document.getElementById("sendBtn").onclick=addSecret;
+const div=document.createElement("div");
+div.className="secret";
+
+div.innerHTML=`
+<div class="meta">${s.age}${s.gender} • ${Math.floor((Date.now()-s.created)/60000)}m</div>
+<div>${s.text}</div>
+
+${reactionsHTML}
+
+<div class="actions">
+<button class="btn share" onclick="share('${s.text}')">Compartir</button>
+<button class="btn report" onclick="report('${s.id}')">Reportar</button>
+</div>
+
+<input placeholder="Comentar...">
+`;
+
+cont.appendChild(div);
+});
+}
 
 loadSecrets();
 
@@ -249,21 +303,14 @@ window.closeFooter=()=>document.getElementById("footer").style.display="none";
 
 </script>
 
-<!-- ⚖️ AVISO LEGAL COMPLETO -->
 <div class="footer" id="footer">
 <span class="close-btn" onclick="closeFooter()">✕</span>
-
 Pretty Secret es una plataforma de libre expresión y entretenimiento. El contenido publicado por los usuarios es de su exclusiva responsabilidad y no refleja la opinión de los administradores.<br><br>
-
 Privacidad: No compartas datos personales propios o de terceros.<br><br>
-
 Moderación: Nos reservamos el derecho de eliminar cualquier contenido que promueva el acoso, el odio o actividades ilegales.<br><br>
-
 Seguridad: Si eres menor de edad, te recomendamos navegar bajo la supervisión de un adulto.<br><br>
-
 Al utilizar este sitio, aceptas nuestros términos de convivencia.<br><br>
-
-Para reportar contenido inapropiado, contacta a: <b>soporteprettysecret@outlook.com</b>
+Para reportar contenido inapropiado: soporteprettysecret@outlook.com
 </div>
 
 </body>
