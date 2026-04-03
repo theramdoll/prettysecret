@@ -8,38 +8,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Reddit+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;background:#0d0d0d;color:#fff;font-family:'Reddit Sans',sans-serif}
-header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron'}
-.container{display:flex;height:90vh}
-.left{width:60%;padding:20px;overflow-y:scroll;border-right:1px solid #333}
-.secret{background:#1a1a1a;padding:15px;margin-bottom:15px;border-radius:10px}
-.meta{font-size:12px;color:#aaa}
-.right{width:40%;padding:20px}
+body{margin:0;background:#0d0d0d;color:white;font-family:'Reddit Sans',sans-serif;}
+header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron',sans-serif;}
+.container{display:flex;height:90vh;}
+.left{width:60%;padding:20px;overflow-y:scroll;border-right:1px solid #333;}
+.secret{background:#1a1a1a;padding:15px;margin-bottom:15px;border-radius:10px;}
+.meta{font-size:12px;color:#aaa;}
+.right{width:40%;padding:20px;}
+textarea,input{width:100%;background:#111;border:none;color:white;padding:10px;border-radius:5px;margin-top:10px;}
+.gender{display:flex;margin-top:10px;}
+.gender button{flex:1;padding:10px;background:black;color:white;border:1px solid #333;}
+button{cursor:pointer}
 
-textarea,input{width:100%;background:#111;border:none;color:#fff;padding:10px;border-radius:5px;margin-top:10px}
-.gender{display:flex;margin-top:10px}
-.gender button{flex:1;padding:10px;background:#000;color:#fff;border:1px solid #333;cursor:pointer}
-button.submit{margin-top:15px;width:100%;padding:12px;background:#444;border:none;color:#fff;cursor:pointer}
+.reaction-btn{font-size:20px;margin:5px;cursor:pointer}
+.reacted{animation:pop .4s ease;filter:drop-shadow(0 0 6px #fff)}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}
 
-.reaction-btn{font-size:18px;margin:5px;cursor:pointer;transition:.2s}
-.reaction-btn:hover{transform:scale(1.2)}
-.reacted{animation:pop .4s;filter:drop-shadow(0 0 6px #fff)}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.6)}100%{transform:scale(1)}}
-
-.neutral{color:#aaa}
-.shy{color:#ffb6c1}
-.melt{color:#00e5ff}
-
-.share-btn{font-size:11px;color:#6bc1ff;cursor:pointer;margin-right:10px}
-.report-btn{font-size:11px;color:#ff6b6b;cursor:pointer}
-
-.pagination{display:flex;justify-content:space-between;padding:10px}
-
-.tabs{display:flex;gap:10px;margin-bottom:10px}
-.tabs button{flex:1;padding:8px;background:#222;border:none;color:#fff;cursor:pointer}
-
-.footer{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);max-width:90%;padding:10px;font-size:10px;color:#bbb;background:#111;border:1px solid #2a2a2a;border-radius:8px;text-align:center}
-.footer .close-btn{position:absolute;top:4px;right:6px;cursor:pointer}
+.footer{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px;
+font-size:10px;color:#bbb}
+.close-btn{position:absolute;top:4px;right:6px;cursor:pointer}
 </style>
 </head>
 
@@ -49,30 +37,20 @@ button.submit{margin-top:15px;width:100%;padding:12px;background:#444;border:non
 
 <div class="container">
 
-<div class="left">
-    <div class="tabs">
-        <button onclick="setMode('recent')">🕒 Recientes</button>
-        <button onclick="setMode('top')">🔥 Populares</button>
-    </div>
-
-    <div id="secrets"></div>
-
-    <div class="pagination">
-        <button onclick="prevPage()">Anterior</button>
-        <button onclick="nextPage()">Siguiente</button>
-    </div>
-</div>
+<div class="left" id="secrets"></div>
 
 <div class="right">
-    <h3>Confesá tu secreto</h3>
-    <textarea id="text"></textarea>
-    <input type="number" id="age" placeholder="Edad">
-    <div class="gender">
-        <button onclick="setGender('M')">M</button>
-        <button onclick="setGender('F')">F</button>
-        <button onclick="setGender('X')">X</button>
-    </div>
-    <button class="submit" id="sendBtn">Enviar</button>
+<h3>Confesá tu secreto</h3>
+<textarea id="text"></textarea>
+<input type="number" id="age" placeholder="Edad">
+
+<div class="gender">
+<button onclick="setGender('M')">M</button>
+<button onclick="setGender('F')">F</button>
+<button onclick="setGender('X')">X</button>
+</div>
+
+<button id="sendBtn">Enviar</button>
 </div>
 
 </div>
@@ -84,7 +62,7 @@ import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, d
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const app = initializeApp({
- apiKey:"AIzaSyB...",
+ apiKey:"AIza...",
  authDomain:"prettysecret-32c22.firebaseapp.com",
  projectId:"prettysecret-32c22"
 });
@@ -92,53 +70,46 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 let selectedGender="X";
-let currentPage=1;
-let mode="recent";
-const perPage=5;
+window.setGender=(g)=>selectedGender=g;
 
-window.setGender=g=>selectedGender=g;
-window.setMode=m=>{mode=m;currentPage=1;loadSecrets();};
-
-function timeAgo(t){
- const d=Math.floor((Date.now()-t)/1000);
- if(d<60)return"hace segundos";
- if(d<3600)return`hace ${Math.floor(d/60)} min`;
- if(d<86400)return`hace ${Math.floor(d/3600)} h`;
- return`hace ${Math.floor(d/86400)} días`;
+/* SEGURIDAD */
+const banned=["idiota","puta","odio"];
+function bad(t){return banned.some(w=>t.toLowerCase().includes(w))}
+function personal(t){
+ return /\d{7,}|@\w+|\S+@\S+/.test(t)
 }
 
-/* GUARDAR */
+/* TIEMPO */
+function timeAgo(t){
+ const d=Math.floor((Date.now()-t)/1000);
+ if(d<60)return"ahora";
+ if(d<3600)return Math.floor(d/60)+"m";
+ if(d<86400)return Math.floor(d/3600)+"h";
+ return Math.floor(d/86400)+"d";
+}
+
+/* POST */
 async function addSecret(){
  const t=document.getElementById("text");
  const a=document.getElementById("age");
- if(!t.value||!a.value)return alert("Completá todo");
+
+ if(!t.value||!a.value)return alert("Completá");
+
+ if(bad(t.value))return alert("Contenido bloqueado");
+ if(personal(t.value))return alert("No datos personales");
 
  await addDoc(collection(db,"secretos"),{
-  text:t.value,age:a.value,gender:selectedGender,
+  text:t.value,
+  age:a.value,
+  gender:selectedGender,
   created:Date.now(),
   reactions:{neutral:0,shy:0,melt:0}
  });
 
- t.value="";a.value="";
+ t.value="";
+ a.value="";
  loadSecrets();
 }
-
-/* SHARE */
-window.shareSecret=text=>{
- if(navigator.share){
-  navigator.share({title:"Pretty Secret",text,url:location.href});
- }else{
-  navigator.clipboard.writeText(text+" "+location.href);
-  alert("Copiado");
- }
-};
-
-/* REPORT */
-window.reportSecret=async(id)=>{
- await addDoc(collection(db,"reportes"),{secretId:id,created:Date.now()});
- alert("Reportado");
- loadSecrets();
-};
 
 /* REACT */
 window.react=async(id,type,current)=>{
@@ -154,87 +125,120 @@ window.react=async(id,type,current)=>{
  loadSecrets();
 };
 
+/* SHARE */
+window.share=(text)=>{
+ navigator.clipboard.writeText(text);
+ alert("Copiado");
+}
+
+/* REPORT */
+window.report=(id)=>{
+ alert("Reportado");
+}
+
+/* COMENTAR */
+window.addComment=async(secretId,parentId=null)=>{
+ const input=document.getElementById(parentId?`reply-${parentId}`:`c-${secretId}`);
+ if(!input.value)return;
+
+ await addDoc(collection(db,"secretos",secretId,"comentarios"),{
+  text:input.value,
+  parentId,
+  created:Date.now()
+ });
+
+ input.value="";
+ loadSecrets();
+};
+
+window.toggleReply=(id)=>{
+ const el=document.getElementById("box-"+id);
+ el.style.display=el.style.display==="none"?"block":"none";
+};
+
 /* LOAD */
 async function loadSecrets(){
  const cont=document.getElementById("secrets");
  cont.innerHTML="";
 
- const secretsSnap=await getDocs(collection(db,"secretos"));
- const reportsSnap=await getDocs(collection(db,"reportes"));
+ const snap=await getDocs(query(collection(db,"secretos"),orderBy("created","desc")));
 
- let reportCount={};
- reportsSnap.forEach(r=>{
-  const id=r.data().secretId;
-  reportCount[id]=(reportCount[id]||0)+1;
- });
-
- let secrets=[];
- secretsSnap.forEach(d=>{
+ for(const d of snap.docs){
   const data=d.data();
-  const reactions=data.reactions||{};
-  const total=(reactions.neutral||0)+(reactions.shy||0)+(reactions.melt||0);
-
-  // 🚫 OCULTAR SI TIENE MUCHOS REPORTES
-  if((reportCount[d.id]||0)>=3) return;
-
-  secrets.push({id:d.id,...data,total});
- });
-
- // 🔥 ORDEN
- if(mode==="top"){
-  secrets.sort((a,b)=>b.total-a.total);
- } else {
-  secrets.sort((a,b)=>b.created-a.created);
- }
-
- const page=secrets.slice((currentPage-1)*perPage,currentPage*perPage);
-
- for(const data of page){
   const r=data.reactions||{};
-  const user=JSON.parse(localStorage.getItem("r")||"{}")[data.id];
+  const reacted=JSON.parse(localStorage.getItem("r")||"{}")[d.id];
 
-  let reactHTML=user
-   ? `<div class="reacted">${["😶","🤭","🫠"][["neutral","shy","melt"].indexOf(user)]} ${r[user]||1}</div>`
-   : `<div>
-      <span class="neutral">😶 ${r.neutral||0}</span>
-      <span class="shy">🤭 ${r.shy||0}</span>
-      <span class="melt">🫠 ${r.melt||0}</span><br>
-      <button class="reaction-btn" onclick="react('${data.id}','neutral',${r.neutral||0})">😶</button>
-      <button class="reaction-btn" onclick="react('${data.id}','shy',${r.shy||0})">🤭</button>
-      <button class="reaction-btn" onclick="react('${data.id}','melt',${r.melt||0})">🫠</button>
-     </div>`;
+  let reactionsHTML="";
+
+  if(reacted){
+   reactionsHTML=`<div class="reacted">${reacted}</div>`;
+  }else{
+   reactionsHTML=`
+   😶 ${r.neutral||0}
+   🤭 ${r.shy||0}
+   🫠 ${r.melt||0}
+   <div>
+   <span class="reaction-btn" onclick="react('${d.id}','neutral',${r.neutral||0})">😶</span>
+   <span class="reaction-btn" onclick="react('${d.id}','shy',${r.shy||0})">🤭</span>
+   <span class="reaction-btn" onclick="react('${d.id}','melt',${r.melt||0})">🫠</span>
+   </div>`;
+  }
+
+  const commentsSnap=await getDocs(collection(db,"secretos",d.id,"comentarios"));
+  let comments=[];
+  commentsSnap.forEach(c=>comments.push({id:c.id,...c.data()}));
+
+  let map={},roots=[];
+  comments.forEach(c=>{c.replies=[];map[c.id]=c});
+  comments.forEach(c=>c.parentId?map[c.parentId]?.replies.push(c):roots.push(c));
+
+  function render(c){
+   return `
+   <div style="margin-left:${c.parentId?15:0}px">
+   • ${c.text}
+   <button onclick="toggleReply('${c.id}')">Resp</button>
+
+   <div id="box-${c.id}" style="display:none">
+   <input id="reply-${c.id}">
+   <button onclick="addComment('${d.id}','${c.id}')">Enviar</button>
+   </div>
+
+   ${c.replies.map(render).join("")}
+   </div>`;
+  }
 
   const div=document.createElement("div");
   div.className="secret";
+
   div.innerHTML=`
-   <div class="meta">${data.age} | ${data.gender} • ${timeAgo(data.created)}</div>
-   <div>${data.text}</div>
+  <div class="meta">${data.age}|${data.gender} • ${timeAgo(data.created)}</div>
+  <div>${data.text}</div>
 
-   <div style="margin-top:5px">
-     <span class="share-btn" onclick="shareSecret('${data.text}')">Compartir</span>
-     <span class="report-btn" onclick="reportSecret('${data.id}')">Reportar</span>
-   </div>
+  ${reactionsHTML}
 
-   ${reactHTML}
+  <button onclick="share('${data.text}')">Compartir</button>
+  <button onclick="report('${d.id}')">Reportar</button>
+
+  <input id="c-${d.id}" placeholder="Comentar">
+  <button onclick="addComment('${d.id}')">Enviar</button>
+
+  ${roots.map(render).join("")}
   `;
+
   cont.appendChild(div);
  }
 }
-
-window.nextPage=()=>{currentPage++;loadSecrets();}
-window.prevPage=()=>{if(currentPage>1){currentPage--;loadSecrets();}}
 
 document.getElementById("sendBtn").onclick=addSecret;
 loadSecrets();
 
 window.closeFooter=()=>document.getElementById("footer").style.display="none";
+
 </script>
 
 <div class="footer" id="footer">
 <span class="close-btn" onclick="closeFooter()">✕</span>
-Pretty Secret es una plataforma de libre expresión.<br>
-No compartas datos personales.<br>
-Reportes: soporteprettysecret@outlook.com
+Plataforma libre. No compartas datos personales.
 </div>
 
 </body>
