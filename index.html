@@ -13,7 +13,7 @@ header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron'}
 .share{background:#1da1f2;color:white}
 .report{background:#ff4d4d;color:white}
 
-/* VOTES PRO */
+/* VOTES */
 .vote-box{display:flex;align-items:center;gap:12px;margin-top:10px}
 .vote-btn{cursor:pointer;font-size:20px;transition:.2s}
 .vote-btn:hover{transform:scale(1.2)}
@@ -36,8 +36,8 @@ textarea,input{width:100%;background:#111;border:none;color:white;padding:10px;b
 <header>PRETTY SECRET</header>
 
 <div class="tabs">
-<div class="tab active" onclick="setMode('recent')">🕒 Recientes</div>
-<div class="tab" onclick="setMode('popular')">🔥 Populares</div>
+<div class="tab active" onclick="setMode(event,'recent')">🕒 Recientes</div>
+<div class="tab" onclick="setMode(event,'popular')">🔥 Populares</div>
 </div>
 
 <div class="container">
@@ -64,41 +64,75 @@ const app=initializeApp({apiKey:"AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",authDo
 const db=getFirestore(app);
 
 let selectedGender="X",mode="recent";
+
 window.setGender=g=>selectedGender=g;
-window.setMode=m=>{mode=m;loadSecrets()};
+
+window.setMode=(e,m)=>{
+mode=m;
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+e.target.classList.add("active");
+loadSecrets();
+};
+
+function timeAgo(ts){
+const diff=Math.floor((Date.now()-ts)/1000);
+if(diff<60)return"ahora";
+const m=Math.floor(diff/60);
+if(m<60)return`${m} min`;
+const h=Math.floor(m/60);
+if(h<24)return`${h} h`;
+const d=Math.floor(h/24);
+if(d<7)return`${d} d`;
+const w=Math.floor(d/7);
+if(w<4)return`${w} sem`;
+const mo=Math.floor(d/30);
+if(mo<12)return`${mo} mes`;
+return`${Math.floor(d/365)} año`;
+}
 
 window.addSecret=async()=>{
 const t=text,a=age;
 if(!t.value||!a.value)return alert("Completá todo");
 await addDoc(collection(db,"secretos"),{text:t.value,age:a.value,gender:selectedGender,created:Date.now(),votes:{up:0,down:0}});
-t.value="";a.value="";loadSecrets();
+t.value="";a.value="";
+loadSecrets();
 };
 
 window.share=t=>{navigator.clipboard.writeText(t);alert("Copiado")};
-window.report=async id=>{await updateDoc(doc(db,"secretos",id),{reported:true});alert("Reportado")};
 
-window.vote=async(id,type,current)=>{
+window.report=async id=>{
+await updateDoc(doc(db,"secretos",id),{reported:true});
+alert("Reportado");
+};
+
+window.vote=async(id,type)=>{
 let v=JSON.parse(localStorage.getItem("v")||"{}"),prev=v[id];
 if(prev===type)return;
 
-/* animación */
-const el=document.getElementById(type+"-"+id);
-if(el){el.classList.add("pop");setTimeout(()=>el.classList.remove("pop"),300)}
+const snap=await getDocs(collection(db,"secretos"));
+let current={up:0,down:0};
+snap.forEach(d=>{if(d.id===id)current=d.data().votes||current});
 
 let update={};
 if(prev)update[`votes.${prev}`]=(current[prev]||0)-1;
 update[`votes.${type}`]=(current[type]||0)+1;
 
 await updateDoc(doc(db,"secretos",id),update);
+
+const el=document.getElementById(type+"-"+id);
+if(el){el.classList.add("pop");setTimeout(()=>el.classList.remove("pop"),300)}
+
 v[id]=type;
 localStorage.setItem("v",JSON.stringify(v));
+
 loadSecrets();
 };
 
 async function loadSecrets(){
 const cont=secrets;
 cont.innerHTML="";
-let snap=await getDocs(query(collection(db,"secretos"),orderBy("created","desc")));
+
+const snap=await getDocs(query(collection(db,"secretos"),orderBy("created","desc")));
 
 let list=[];
 snap.forEach(d=>{
@@ -115,13 +149,13 @@ const div=document.createElement("div");
 div.className="secret";
 
 div.innerHTML=`
-<div class="meta">${s.age}${s.gender} • ${Math.floor((Date.now()-s.created)/60000)}m</div>
+<div class="meta">${s.age}${s.gender} • ${timeAgo(s.created)}</div>
 <div>${s.text}</div>
 
 <div class="vote-box">
-<span id="up-${s.id}" class="vote-btn up ${userVote==='up'?'active':''}" onclick="vote('${s.id}','up',${JSON.stringify(s.votes)})">⬆️ ${s.votes.up||0}</span>
+<span id="up-${s.id}" class="vote-btn up ${userVote==='up'?'active':''}" onclick="vote('${s.id}','up')">⬆️ ${s.votes.up||0}</span>
 <span>${s.score}</span>
-<span id="down-${s.id}" class="vote-btn down ${userVote==='down'?'active':''}" onclick="vote('${s.id}','down',${JSON.stringify(s.votes)})">⬇️ ${s.votes.down||0}</span>
+<span id="down-${s.id}" class="vote-btn down ${userVote==='down'?'active':''}" onclick="vote('${s.id}','down')">⬇️ ${s.votes.down||0}</span>
 </div>
 
 <div class="actions">
@@ -137,6 +171,7 @@ cont.appendChild(div);
 }
 
 loadSecrets();
+
 window.closeFooter=()=>footer.style.display="none";
 </script>
 
