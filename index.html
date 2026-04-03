@@ -1,166 +1,43 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pretty Secret</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Pretty Secret</title><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Reddit+Sans:wght@300;400;600&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#0d0d0d;color:white;font-family:'Reddit Sans',sans-serif}
+header{text-align:center;padding:20px;font-size:40px;font-family:'Orbitron'}
+.tabs{display:flex;gap:10px;padding:0 20px 10px}
+.tab{background:#1a1a1a;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:14px;border:1px solid #333}
+.tab.active{background:#2a2a2a}
+.container{display:flex;height:85vh}
+.left{width:60%;padding:20px;overflow-y:auto;border-right:1px solid #333}
+.secret{background:#1a1a1a;padding:15px;margin-bottom:15px;border-radius:10px}
+.meta{font-size:12px;color:#aaa}
+.actions{margin-top:10px;display:flex;gap:10px}
+.btn{padding:5px 10px;border:none;border-radius:6px;cursor:pointer;font-size:12px}
+.share{background:#1da1f2;color:white}
+.report{background:#ff4d4d;color:white}
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Reddit+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+/* VOTES PRO */
+.vote-box{display:flex;align-items:center;gap:12px;margin-top:10px}
+.vote-btn{cursor:pointer;font-size:20px;transition:.2s}
+.vote-btn:hover{transform:scale(1.2)}
+.up{color:#4da6ff}
+.down{color:#ff4d4d}
+.active{transform:scale(1.4);filter:drop-shadow(0 0 6px currentColor)}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.6)}100%{transform:scale(1)}}
+.pop{animation:pop .3s}
 
-<style>
-body{
-    margin:0;
-    background:#0d0d0d;
-    color:white;
-    font-family:'Reddit Sans',sans-serif;
-}
-
-header{
-    text-align:center;
-    padding:20px;
-    font-size:40px;
-    font-family:'Orbitron';
-}
-
-/* TABS */
-.tabs{
-    display:flex;
-    gap:10px;
-    padding:0 20px 10px;
-}
-
-.tab{
-    background:#1a1a1a;
-    padding:8px 14px;
-    border-radius:20px;
-    cursor:pointer;
-    font-size:14px;
-    border:1px solid #333;
-}
-
-.tab.active{
-    background:#2a2a2a;
-}
-
-.container{
-    display:flex;
-    height:85vh;
-}
-
-.left{
-    width:60%;
-    padding:20px;
-    overflow-y:auto;
-    border-right:1px solid #333;
-}
-
-.secret{
-    background:#1a1a1a;
-    padding:15px;
-    margin-bottom:15px;
-    border-radius:10px;
-}
-
-.meta{
-    font-size:12px;
-    color:#aaa;
-}
-
-/* BOTONES */
-.actions{
-    margin-top:10px;
-    display:flex;
-    gap:10px;
-}
-
-.btn{
-    padding:5px 10px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    font-size:12px;
-}
-
-.share{ background:#1da1f2; color:white; }
-.report{ background:#ff4d4d; color:white; }
-
-/* VOTES */
-.vote-box{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-top:10px;
-}
-
-.vote-btn{
-    cursor:pointer;
-    font-size:18px;
-}
-
-.vote-btn.active{
-    color:#ff4500;
-}
-
-/* RIGHT */
-.right{
-    width:40%;
-    padding:20px;
-}
-
-textarea,input{
-    width:100%;
-    background:#111;
-    border:none;
-    color:white;
-    padding:10px;
-    border-radius:5px;
-    margin-top:10px;
-}
-
-.gender{
-    display:flex;
-    margin-top:10px;
-}
-
-.gender button{
-    flex:1;
-    padding:10px;
-    background:black;
-    color:white;
-    border:1px solid #333;
-    cursor:pointer;
-}
-
-/* FOOTER */
-.footer{
-    position:fixed;
-    bottom:10px;
-    left:50%;
-    transform:translateX(-50%);
-    max-width:90%;
-    padding:10px;
-    font-size:10px;
-    background:#111;
-    border:1px solid #333;
-    border-radius:8px;
-}
-
-.close-btn{
-    position:absolute;
-    right:5px;
-    top:3px;
-    cursor:pointer;
-}
-</style>
-</head>
+.right{width:40%;padding:20px}
+textarea,input{width:100%;background:#111;border:none;color:white;padding:10px;border-radius:5px;margin-top:10px}
+.gender{display:flex;margin-top:10px}
+.gender button{flex:1;padding:10px;background:black;color:white;border:1px solid #333;cursor:pointer}
+.footer{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);max-width:90%;padding:10px;font-size:10px;background:#111;border:1px solid #333;border-radius:8px}
+.close-btn{position:absolute;right:5px;top:3px;cursor:pointer}
+</style></head>
 
 <body>
 
 <header>PRETTY SECRET</header>
 
 <div class="tabs">
-    <div class="tab active" onclick="setMode('recent')">🕒 Recientes</div>
-    <div class="tab" onclick="setMode('popular')">🔥 Populares</div>
+<div class="tab active" onclick="setMode('recent')">🕒 Recientes</div>
+<div class="tab" onclick="setMode('popular')">🔥 Populares</div>
 </div>
 
 <div class="container">
@@ -170,123 +47,69 @@ textarea,input{
 <h3>Confesá tu secreto</h3>
 <textarea id="text"></textarea>
 <input type="number" id="age" placeholder="Edad">
-
 <div class="gender">
 <button onclick="setGender('M')">M</button>
 <button onclick="setGender('F')">F</button>
 <button onclick="setGender('X')">X</button>
 </div>
-
 <button onclick="addSecret()">Enviar</button>
 </div>
 </div>
 
 <script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import{getFirestore,collection,addDoc,getDocs,query,orderBy,updateDoc,doc}from"https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc } 
-from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",authDomain:"prettysecret-32c22.firebaseapp.com",projectId:"prettysecret-32c22"});
+const db=getFirestore(app);
 
-const app = initializeApp({
-  apiKey:"AIzaSyBPhTnskIjMpiOaALmjeCVQgRtuIE6DLAU",
-  authDomain:"prettysecret-32c22.firebaseapp.com",
-  projectId:"prettysecret-32c22"
-});
+let selectedGender="X",mode="recent";
+window.setGender=g=>selectedGender=g;
+window.setMode=m=>{mode=m;loadSecrets()};
 
-const db = getFirestore(app);
-
-let selectedGender="X";
-let mode="recent";
-
-window.setGender=(g)=>selectedGender=g;
-window.setMode=(m)=>{mode=m;loadSecrets();};
-
-/* GUARDAR */
 window.addSecret=async()=>{
-const t=document.getElementById("text");
-const a=document.getElementById("age");
-
+const t=text,a=age;
 if(!t.value||!a.value)return alert("Completá todo");
-
-await addDoc(collection(db,"secretos"),{
-text:t.value,
-age:a.value,
-gender:selectedGender,
-created:Date.now(),
-votes:{up:0,down:0}
-});
-
-t.value="";
-a.value="";
-
-loadSecrets();
+await addDoc(collection(db,"secretos"),{text:t.value,age:a.value,gender:selectedGender,created:Date.now(),votes:{up:0,down:0}});
+t.value="";a.value="";loadSecrets();
 };
 
-/* SHARE */
-window.share=(text)=>{
-navigator.clipboard.writeText(text);
-alert("Copiado");
-};
+window.share=t=>{navigator.clipboard.writeText(t);alert("Copiado")};
+window.report=async id=>{await updateDoc(doc(db,"secretos",id),{reported:true});alert("Reportado")};
 
-/* REPORT */
-window.report=async(id)=>{
-await updateDoc(doc(db,"secretos",id),{reported:true});
-alert("Reportado");
-};
-
-/* VOTE */
 window.vote=async(id,type,current)=>{
-let v=JSON.parse(localStorage.getItem("v")||"{}");
-let prev=v[id];
-
+let v=JSON.parse(localStorage.getItem("v")||"{}"),prev=v[id];
 if(prev===type)return;
 
+/* animación */
+const el=document.getElementById(type+"-"+id);
+if(el){el.classList.add("pop");setTimeout(()=>el.classList.remove("pop"),300)}
+
 let update={};
-
-if(prev){
-update[`votes.${prev}`]=(current[prev]||0)-1;
-}
-
+if(prev)update[`votes.${prev}`]=(current[prev]||0)-1;
 update[`votes.${type}`]=(current[type]||0)+1;
 
 await updateDoc(doc(db,"secretos",id),update);
-
 v[id]=type;
 localStorage.setItem("v",JSON.stringify(v));
-
 loadSecrets();
 };
 
-/* LOAD */
 async function loadSecrets(){
-const cont=document.getElementById("secrets");
+const cont=secrets;
 cont.innerHTML="";
-
-let q=query(collection(db,"secretos"),orderBy("created","desc"));
-const snap=await getDocs(q);
+let snap=await getDocs(query(collection(db,"secretos"),orderBy("created","desc")));
 
 let list=[];
 snap.forEach(d=>{
-let data=d.data();
-let votes=data.votes||{up:0,down:0};
-let score=(votes.up||0)-(votes.down||0);
-list.push({id:d.id,...data,votes,score});
+let data=d.data(),votes=data.votes||{up:0,down:0};
+list.push({id:d.id,...data,votes,score:(votes.up||0)-(votes.down||0)});
 });
 
-if(mode==="popular"){
-list.sort((a,b)=>b.score-a.score);
-}
+if(mode==="popular")list.sort((a,b)=>b.score-a.score);
 
 list.forEach(s=>{
 let userVote=JSON.parse(localStorage.getItem("v")||"{}")[s.id];
-
-const voteHTML=`
-<div class="vote-box">
-<span class="vote-btn ${userVote==='up'?'active':''}" onclick="vote('${s.id}','up',${JSON.stringify(s.votes)})">⬆️</span>
-<span>${s.score}</span>
-<span class="vote-btn ${userVote==='down'?'active':''}" onclick="vote('${s.id}','down',${JSON.stringify(s.votes)})">⬇️</span>
-</div>
-`;
 
 const div=document.createElement("div");
 div.className="secret";
@@ -295,7 +118,11 @@ div.innerHTML=`
 <div class="meta">${s.age}${s.gender} • ${Math.floor((Date.now()-s.created)/60000)}m</div>
 <div>${s.text}</div>
 
-${voteHTML}
+<div class="vote-box">
+<span id="up-${s.id}" class="vote-btn up ${userVote==='up'?'active':''}" onclick="vote('${s.id}','up',${JSON.stringify(s.votes)})">⬆️ ${s.votes.up||0}</span>
+<span>${s.score}</span>
+<span id="down-${s.id}" class="vote-btn down ${userVote==='down'?'active':''}" onclick="vote('${s.id}','down',${JSON.stringify(s.votes)})">⬇️ ${s.votes.down||0}</span>
+</div>
 
 <div class="actions">
 <button class="btn share" onclick="share('${s.text}')">Compartir</button>
@@ -310,9 +137,7 @@ cont.appendChild(div);
 }
 
 loadSecrets();
-
-window.closeFooter=()=>document.getElementById("footer").style.display="none";
-
+window.closeFooter=()=>footer.style.display="none";
 </script>
 
 <div class="footer" id="footer">
@@ -325,5 +150,4 @@ Al utilizar este sitio, aceptas nuestros términos de convivencia.<br><br>
 Para reportar contenido inapropiado: soporteprettysecret@outlook.com
 </div>
 
-</body>
-</html>
+</body></html>
